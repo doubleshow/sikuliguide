@@ -33,6 +33,7 @@ public class StepEditViewTestCase {
    private ContextImage contextImage = FixtureFactory.createContextImage();
    private StepEditView stepView;
    private Step step;
+   private Target target = FixtureFactory.createTarget();
    
    
    private JPanelFixture textPropertyEditor;
@@ -54,6 +55,7 @@ public class StepEditViewTestCase {
       step.addSprite(text);
       step.addSprite(circle);
       step.addSprite(flag);
+      step.addSprite(target);
       step.setContextImage(contextImage);
       
       stepView = new StepEditView(step);
@@ -68,11 +70,11 @@ public class StepEditViewTestCase {
       window.show(); // shows the frame to test
       window.resizeTo(new Dimension(800,600));
       
-      textPropertyEditor = window.panel("TextPropertyEditor");
+      textPropertyEditor = window.panel(withNameShowingNotRequired("TextPropertyEditor"));
       textView = window.panel("Text");
       flagView = window.panel("Flag");
       circleView = window.panel("Circle");
-      controlBox = window.panel("ControlBox");
+      controlBox = window.panel(withNameShowingNotRequired("ControlBox"));
       contextImageView = window.label("ContextImage");
    }
    
@@ -167,6 +169,12 @@ public class StepEditViewTestCase {
       assertThat(step.getSprites(), not(hasItem((Sprite)text)));      
    }
    
+   
+   @Test
+   public void testAtStartTextPropertyEditorShouldNotBeVisible(){
+      textPropertyEditor.requireNotVisible();
+   }
+   
    @Test
    public void testDoubleClickToBringUpTextPropertyEditor(){      
       textView.doubleClick();      
@@ -234,7 +242,7 @@ public class StepEditViewTestCase {
    }
 
    
-   GenericTypeMatcher<JPanel> withNameIgnoringVisibility(final String name){
+   GenericTypeMatcher<JPanel> withNameShowingNotRequired(final String name){
       return new GenericTypeMatcher<JPanel>(JPanel.class, false){
          @Override
          protected boolean isMatching(JPanel p) {

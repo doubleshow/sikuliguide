@@ -1,11 +1,17 @@
 package org.sikuli.guide;
 
+import java.awt.AWTException;
 import java.awt.Color;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.Timer;
@@ -13,6 +19,7 @@ import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
 import org.junit.Test;
+import org.sikuli.cv.FindResult;
 import org.sikuli.guide.StepView;
 
 
@@ -62,10 +69,12 @@ class FixtureFactory {
       final Text txt = FixtureFactory.createText();
       final Circle circle = FixtureFactory.createCircle();
       final FlagText flag = FixtureFactory.createFlagText();
+      final Target target = FixtureFactory.createTarget();
       
       step.addSprite(txt);      
       step.addSprite(circle);
       step.addSprite(flag);
+      step.addSprite(target);
       
       try {
          ContextImage contextImage = new ContextImage(new File(ROOT, "screen.png"));
@@ -77,10 +86,72 @@ class FixtureFactory {
       return step;
    }
 
+   public static Target createTarget() {
+      Target target = new DefaultTarget();
+      target.setX(265);
+      target.setY(190);
+      target.setWidth(50);
+      target.setHeight(30);
+      return target;
+   }
+
 }
 
 public class ViewTestCase {
    
+   
+   @Test
+   public void testTracker() throws IOException, InterruptedException, AWTException {
+      
+      BufferedImage targetImage = ImageIO.read(new File("src/test/resources/tracker", "mouse.png")); 
+      
+      Target target = mock(Target.class);
+      when(target.getImage()).thenReturn(targetImage);
+
+      Tracker tracker = new Tracker(target);
+      
+      tracker.setScreenGrabber(new ScreenGrabber(){
+
+         Robot robot = new Robot();
+         
+         @Override
+         public BufferedImage grab() {
+            Rectangle area = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
+            return robot.createScreenCapture(area);
+         }
+         
+      });
+      
+      tracker.addTrackerListener(new TrackerListener(){
+
+         @Override
+         public void targetFoundFirstTime(Target target, FindResult match) {
+            
+            System.out.println("m : " + match);            
+         }
+
+         @Override
+         public void targetFoundAgain(Target target, FindResult match) {
+         }
+
+         @Override
+         public void targetNotFound(Target target) {
+         }
+         
+      });
+      
+      
+      tracker.start();
+      
+      
+      
+      
+      Object lock = new Object();
+      synchronized(lock){
+         lock.wait();
+      }
+
+   }
 
    @Test
    public void testStepEditView() throws InterruptedException {

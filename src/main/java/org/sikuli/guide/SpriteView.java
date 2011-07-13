@@ -295,6 +295,8 @@ class ViewFactory {
    public static SpriteView createView(Sprite sprite){
       if (sprite instanceof FlagText)
          return new FlagTextView((FlagText)sprite);
+      else if (sprite instanceof Target)
+         return new TargetView((Target)sprite);
       else if (sprite instanceof Text)
          return new TextView((Text)sprite);
       else if (sprite instanceof Circle)

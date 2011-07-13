@@ -58,6 +58,9 @@ class StepEditView extends StepView {
       _controlBox = new ControlBox();
       _controlBoxView = new ControlBoxView(_controlBox);
       
+      _textPropertyEditor.setVisible(false);
+      _controlBoxView.setVisible(false);
+      
       add(_controlBoxView,0);
       add(_textPropertyEditor,0);
 //      addKeyListener(keyTool);
