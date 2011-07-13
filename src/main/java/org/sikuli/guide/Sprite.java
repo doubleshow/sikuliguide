@@ -24,6 +24,9 @@ public interface Sprite {
    public boolean isWithShadow();
    public void setWithShadow(boolean hasShadow);
    
+   public String getName();
+   public void setName(String name);
+   
    public Color getBackground();
    public Color getForeground();
    
@@ -38,6 +41,7 @@ public interface Sprite {
    static public final String PROPERTY_WIDTH = "width";
    static public final String PROPERTY_X = "x";
    static public final String PROPERTY_Y = "y";   
+   static public final String PROPERTY_NAME = "name";   
    static public final String PROPERTY_OPACITY = "opacity";
    static public final String PROPERTY_FOREGROUND = "foreground";
    static public final String PROPERTY_BACKGROUND = "background";
@@ -89,7 +93,9 @@ class DefaultSprite implements Sprite {
    private int width = 0;
    @Attribute
    private int height = 0;
-
+   @Attribute
+   private String name = "";
+   
    public int padding=5;
 
    @Attribute
@@ -160,7 +166,16 @@ class DefaultSprite implements Sprite {
       return string2Color(foregroundColor);
    }
    
+   @Override
+   public String getName(){
+      return name;
+   }
    
+   @Override
+   public void setName(String name){
+      this.pcs.firePropertyChange(PROPERTY_NAME, this.name, this.name = name);
+   }
+      
    @Override
    public void setWithShadow(boolean hasShadow) {
       this.hasShadow = hasShadow;

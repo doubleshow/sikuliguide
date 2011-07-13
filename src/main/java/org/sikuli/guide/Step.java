@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -26,8 +27,8 @@ public class Step implements PropertyChangeListener {
       _contextImage = contextImage;
    }
    
-   public Sprite[] getSprites(){
-      return _spriteList.toArray(new Sprite[0]);
+   public List<Sprite> getSprites(){
+      return _spriteList;
    }
    
    public void addSprite(Sprite sprite) {

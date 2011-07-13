@@ -26,6 +26,7 @@ class FixtureFactory {
       Text t = new DefaultText("Text");            
       t.setX(100);
       t.setY(100);
+      t.setName("Text");
       return t;
    }  
    
@@ -39,9 +40,18 @@ class FixtureFactory {
       FlagText f = new FlagText("Flag");
       f.setLocation(200,100);
       f.setForeground(Color.black);
+      f.setName("Flag");
       return f;
    }
    
+   static ContextImage createContextImage(){
+      try {
+         return new ContextImage(new File(ROOT, "screen.png"));
+      } catch (IOException e) {
+         e.printStackTrace();
+      }
+      return null;
+   }
    
    final static String ROOT = "src/test/resources";
    
@@ -72,11 +82,11 @@ public class ViewTestCase {
    
 
    @Test
-   public void testStepThumbView() throws InterruptedException {
+   public void testStepEditView() throws InterruptedException {
       
       Step step = FixtureFactory.createStep();
       
-      StepView view = new StepView(step);
+      StepEditView view = new StepEditView(step);
       
       JFrame f = new JFrame();
       f.setLayout(new BoxLayout(f.getContentPane(),BoxLayout.X_AXIS));

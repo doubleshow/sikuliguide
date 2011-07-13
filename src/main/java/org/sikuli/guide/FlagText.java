@@ -34,8 +34,9 @@ class FlagTextView extends SpriteView {
       super(pointingText);  
       _pointingText = pointingText;
       updateText();
+      setOpaque(false);
    }
-   
+      
    @Override
    public void propertyChange(PropertyChangeEvent evt) {
       super.propertyChange(evt);

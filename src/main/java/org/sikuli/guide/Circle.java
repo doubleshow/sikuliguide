@@ -19,6 +19,7 @@ class CircleView extends SpriteView {
    
    public CircleView(Circle circle) {
       super(circle);
+      setOpaque(false);
    }
 
    @Override

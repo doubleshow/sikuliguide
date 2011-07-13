@@ -14,8 +14,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.swing.JComponent;
+import javax.swing.JPanel;
 
-class SpriteView extends JComponent implements PropertyChangeListener {
+class SpriteView extends JPanel implements PropertyChangeListener {
       
    protected Sprite _sprite;
    
@@ -25,6 +26,8 @@ class SpriteView extends JComponent implements PropertyChangeListener {
 //      init();
       updateBounds();
       updateStyle();
+      updateName();
+      setFocusable(true);
    }
    
    // Initialize the view
@@ -32,6 +35,10 @@ class SpriteView extends JComponent implements PropertyChangeListener {
    }
    
    Point origin = new Point(0,0);
+   
+   void updateName(){
+      setName(_sprite.getName());
+   }
    
    protected void updateStyle(){
       setForeground(_sprite.getForeground());
@@ -255,6 +262,8 @@ class SpriteView extends JComponent implements PropertyChangeListener {
          updateStyle();   
       } else if (evt.getPropertyName().equals(Sprite.PROPERTY_OPACITY)){
 
+      } else if (evt.getPropertyName().equals(Sprite.PROPERTY_NAME)){
+         updateName();
       } else {  
          return;
       }
@@ -269,6 +278,10 @@ class SpriteView extends JComponent implements PropertyChangeListener {
 //         repaint();
 //      }
 
+   }
+
+   public Sprite getSprite() {
+      return _sprite;
    }
 }
 
