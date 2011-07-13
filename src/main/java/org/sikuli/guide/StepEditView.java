@@ -14,6 +14,8 @@ class StepEditView extends StepView {
    SelectionTool selectionTool = new SelectionTool();
    KeyTool keyTool = new KeyTool();
    ComponentDragMover cm = new ComponentDragMover();
+   TextPropertyEditor _textPropertyEditor = new TextPropertyEditor();
+   
    
    public StepEditView(Step step) {
       super(step);
@@ -57,6 +59,7 @@ class StepEditView extends StepView {
       _controlBoxView = new ControlBoxView(_controlBox);
       
       add(_controlBoxView,0);
+      add(_textPropertyEditor,0);
 //      addKeyListener(keyTool);
    }
    
@@ -73,6 +76,8 @@ class StepEditView extends StepView {
    private void clearSelection() {
       selectedSpriteView = null;            
       _controlBoxView.setVisible(false);
+      _textPropertyEditor.setVisible(false);
+      _textPropertyEditor.saveText();
    }
 
    class KeyTool implements KeyListener {
@@ -138,7 +143,20 @@ class StepEditView extends StepView {
             selectedSpriteView.requestFocus();
             
             _controlBoxView.setVisible(true);
-            _controlBox.setTarget(getSelectedSprite());            
+            _controlBox.setTarget(getSelectedSprite());
+            
+            _textPropertyEditor.saveText();
+            _textPropertyEditor.setVisible(false);
+            
+            if (e.getClickCount() == 2 && getSelectedSprite() instanceof Text){
+               _textPropertyEditor.setVisible(true);
+               Point loc = selectedSpriteView.getLocation();
+               _textPropertyEditor.setLocation(loc.x, loc.y-30);
+               _textPropertyEditor.setTextSprite((Text)getSelectedSprite());
+               _textPropertyEditor.requestFocus();
+               
+               
+            }
          }
       }
 

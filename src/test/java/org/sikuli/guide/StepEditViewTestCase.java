@@ -11,15 +11,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 
-import static org.fest.swing.core.matcher.FrameMatcher.*;
-
 import org.fest.swing.core.ComponentDragAndDrop;
 import org.fest.swing.core.GenericTypeMatcher;
-import org.fest.swing.core.NameMatcher;
-import org.fest.swing.core.matcher.NamedComponentMatcherTemplate;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiQuery;
 import org.fest.swing.fixture.FrameFixture;
+import org.fest.swing.fixture.JLabelFixture;
+import org.fest.swing.fixture.JPanelFixture;
 
 
 import org.junit.After;
@@ -36,6 +34,14 @@ public class StepEditViewTestCase {
    private StepEditView stepView;
    private Step step;
    
+   
+   private JPanelFixture textPropertyEditor;
+   private JPanelFixture textView;
+   private JPanelFixture flagView;
+   private JPanelFixture circleView;
+   private JPanelFixture controlBox;
+   private JLabelFixture contextImageView;
+      
    @After
    public void tearDown() {
       window.cleanUp();
@@ -61,23 +67,30 @@ public class StepEditViewTestCase {
       window = new FrameFixture(f);
       window.show(); // shows the frame to test
       window.resizeTo(new Dimension(800,600));
+      
+      textPropertyEditor = window.panel("TextPropertyEditor");
+      textView = window.panel("Text");
+      flagView = window.panel("Flag");
+      circleView = window.panel("Circle");
+      controlBox = window.panel("ControlBox");
+      contextImageView = window.label("ContextImage");
    }
    
    @Test
    public void testClickToSelectASpite() {    
-      window.panel("Text").click();      
+      textView.click();      
       assertThat(stepView.getSelectedSprite(), sameInstance((Sprite)text));   
       
-      window.panel("ControlBox").requireVisible();
+      controlBox.requireVisible();
    }
    
    @Test
    public void testClickOnContextImageToUnSelect(){
      
-      window.panel("Text").click();      
+      textView.click();      
       assertThat(stepView.getSelectedSprite(), sameInstance((Sprite)text));      
 
-      window.label("ContextImage").click();
+      contextImageView.click();
       assertThat(stepView.getSelectedSprite(), nullValue());
       
    }
@@ -85,35 +98,28 @@ public class StepEditViewTestCase {
    @Test
    public void testClickOnContextImageToUnSelect_ControlBoxShouldBeInvisible(){
      
-      window.panel("Text").click();      
-      window.label("ContextImage").click();
+      textView.click();      
+      contextImageView.click();
       
-      window.panel(new GenericTypeMatcher<JPanel>(JPanel.class, false){
-         @Override
-         protected boolean isMatching(JPanel p) {
-            return p.getName() != null && p.getName().equals("ControlBox");
-         }         
-      }).requireNotVisible();      
+      controlBox.requireNotVisible();      
    }
    
    @Test
-   public void testClickOnContextImageToUnSelectAndSelectAnotherSprite_ControlBoxShouldBeVisible(){
-     
-      window.panel("Text").click();      
-      window.label("ContextImage").click();
-      window.panel("Flag").click();
-      
-      window.panel("ControlBox").requireVisible();
+   public void testClickOnContextImageToUnSelectAndSelectAnotherSprite_ControlBoxShouldBeVisible(){     
+      textView.click();      
+      contextImageView.click();
+      flagView.click();      
+      controlBox.requireVisible();
    }
 
    
    @Test
    public void testClickToSelectSpriteOneAfterAnother() {
     
-      window.panel("Text").click();      
+      textView.click();      
       assertThat(stepView.getSelectedSprite(), sameInstance((Sprite)text));
       
-      window.panel("Flag").click();      
+      flagView.click();      
       assertThat(stepView.getSelectedSprite(), sameInstance((Sprite)flag));
       
    }
@@ -121,9 +127,9 @@ public class StepEditViewTestCase {
    @Test
    public void testPressESCtoUnselect(){
       
-      window.panel("Text").click();            
-      window.panel("Text").focus();
-      window.panel("Text").pressAndReleaseKeys(KeyEvent.VK_ESCAPE);  
+      textView.click();            
+      textView.focus();
+      textView.pressAndReleaseKeys(KeyEvent.VK_ESCAPE);  
 
       assertThat(stepView.getSelectedSprite(), nullValue());     
    }
@@ -131,17 +137,17 @@ public class StepEditViewTestCase {
    @Test
    public void testDragText_BothViewAndModelShouldMove(){
 
-      window.panel("Text").click();            
-      //window.panel("Text").d();
+      textView.click();            
+      //textView.d();
       
-      Component textView = window.panel("Text").target;      
-      Component contextImageView = window.label("ContextImage").target;
+      Component t = textView.target;      
+      Component c = contextImageView.target;
       
       ComponentDragAndDrop cdd = new ComponentDragAndDrop(window.robot);
-      cdd.drag(textView, new Point(10,10));
-      cdd.drop(contextImageView, new Point(50,40));
+      cdd.drag(t, new Point(10,10));
+      cdd.drop(c, new Point(50,40));
       
-      Point newLocation = textView.getLocation();
+      Point newLocation = t.getLocation();
       
       assertThat(newLocation.x, equalTo(40));
       assertThat(text.getX(), equalTo(40));
@@ -151,24 +157,107 @@ public class StepEditViewTestCase {
 
    }
    
-   @Test(expected=org.fest.swing.exception.ComponentLookupException.class)
+   @Test
    public void testPressDeleteToRemoveTheSelectedSprite() {
     
-      window.panel("Text").click();            
-      window.panel("Text").focus();
-      window.panel("Text").pressAndReleaseKeys(KeyEvent.VK_DELETE);  
+      textView.click();            
+      textView.focus();
+      textView.pressAndReleaseKeys(KeyEvent.VK_DELETE);  
 
       assertThat(step.getSprites(), not(hasItem((Sprite)text)));      
-      window.panel("Text");     
+   }
+   
+   @Test
+   public void testDoubleClickToBringUpTextPropertyEditor(){      
+      textView.doubleClick();      
+      textPropertyEditor.requireVisible();
+   }
+   
+   @Test
+   public void testDoubleClickToBringUpTextPropertyEditor_andAnother(){      
+      textView.doubleClick();      
+      textPropertyEditor.requireVisible();
       
+      flagView.doubleClick();      
+      textPropertyEditor.requireVisible();
+      textPropertyEditor.textBox().requireText(flag.getText());
+   }
+
+   
+   @Test
+   public void testDoubleClickOnNonTextSprite_ShouldNotBringUpTextPropertyEditor(){      
+      circleView.doubleClick();      
+      textPropertyEditor.requireNotVisible();
+   }
+
+   
+   @Test
+   public void testEnterNewTextInTextPropertyEditor_TextShouldBeUpdated(){      
+      textView.doubleClick();      
+      textPropertyEditor.textBox().enterText("New Text");
+      textPropertyEditor.textBox().pressAndReleaseKeys(KeyEvent.VK_ENTER);
+      
+      assertThat(text.getText(), equalTo("New Text"));
+   }
+   
+   @Test
+   public void testEnterNewTextInTextPropertyEditorAndPressESCToCancel_TextShouldNotBeUpdated(){      
+      String oldText = text.getText();
+      
+      textView.doubleClick();      
+      textPropertyEditor.textBox().enterText("New");
+      textPropertyEditor.textBox().pressAndReleaseKeys(KeyEvent.VK_ESCAPE);
+      
+      assertThat(text.getText(), equalTo(oldText));
+   }
+   
+   @Test
+   public void testEnterNewTextInTextPropertyEditorAndClickOnContextImage_TextShouldBeUpdated(){      
+      
+      textView.doubleClick();      
+      textPropertyEditor.textBox().enterText("New");
+      contextImageView.click();
+      
+      assertThat(text.getText(), equalTo("New"));
+   }
+
+   @Test
+   public void testEnterNewTextInTextPropertyEditorAndClickOnAnotherSprite_TextShouldBeUpdated(){      
+      
+      textView.doubleClick();      
+      textPropertyEditor.textBox().enterText("New");
+      flagView.click();
+      
+      assertThat(text.getText(), equalTo("New"));   
+      
+      textPropertyEditor.requireNotVisible();
+   }
+
+   
+   GenericTypeMatcher<JPanel> withNameIgnoringVisibility(final String name){
+      return new GenericTypeMatcher<JPanel>(JPanel.class, false){
+         @Override
+         protected boolean isMatching(JPanel p) {
+            return p.getName() != null && p.getName().equals(name);
+         }         
+      };
+   }
+   
+   @Test
+   public void testPressESCToCloseTextPropertyEditor(){      
+      textView.doubleClick();      
+      textPropertyEditor.requireVisible();
+      textPropertyEditor.textBox().pressAndReleaseKeys(KeyEvent.VK_ESCAPE);
+
+      textPropertyEditor.requireNotVisible();         
    }
    
    @Test
    public void testPressDeleteToRemoveTheSelectedSprite_ControlBoxShouldBeInvisible() {
     
-      window.panel("Text").click();            
-      window.panel("Text").focus();
-      window.panel("Text").pressAndReleaseKeys(KeyEvent.VK_DELETE);  
+      textView.click();            
+      textView.focus();
+      textView.pressAndReleaseKeys(KeyEvent.VK_DELETE);  
 
       window.panel(new GenericTypeMatcher<JPanel>(JPanel.class, false){
          @Override
