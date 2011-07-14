@@ -6,6 +6,10 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
 
 interface Target extends Sprite {
    public BufferedImage getBufferedImage();
@@ -13,10 +17,41 @@ interface Target extends Sprite {
    public void setFound(boolean visible);
 }
 
-class ContextTarget extends DefaultSprite implements Target {
+class DefaultTarget extends DefaultSprite implements Target{
+
+   boolean visible = false;
+   BufferedImage image;
+   public DefaultTarget(BufferedImage image) {
+      super(0,0,image.getWidth(), image.getHeight());
+      this.image = image;
+   }
+   
+   public DefaultTarget(){     
+   }
+
+   @Override
+   public boolean isFound() {
+      return false;
+   }
+
+   @Override
+   public void setFound(boolean visible) {
+      this.visible = visible;
+   }
+
+   @Override
+   public BufferedImage getBufferedImage() {
+      return image;
+   }
+
+}
+
+class ContextTarget extends DefaultTarget {
    
    
    private AbstractContextImage contextImage;
+   private BufferedImage image = null;
+   
    ContextTarget(AbstractContextImage contextImage){
       this.contextImage = contextImage;
    }   
@@ -28,27 +63,16 @@ class ContextTarget extends DefaultSprite implements Target {
       g.dispose();
       return dest;
    }
-
    
    @Override
-   public BufferedImage getBufferedImage(){      
-      Rectangle area = getBounds();      
-      return crop(contextImage.getBufferedImage(), area);
+   public BufferedImage getBufferedImage(){
+      if (image == null){
+         Rectangle area = getBounds();     
+         image = crop(contextImage.getBufferedImage(), area);
+      }
+      return image;
    }
    
-   boolean visible = false;
-
-   @Override
-   public boolean isFound(){
-      return false;
-   }
-   
-   @Override
-   public void setFound(boolean visible){
-      this.visible = visible;
-   }
-
-
    public void setContextImage(ContextImage contextImage) {
       this.contextImage = contextImage;
    }

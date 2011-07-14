@@ -244,7 +244,7 @@ public class Tracker extends Thread {
 //   }
    
    FindResult findTarget(){
-      System.out.println("[Tracker] find");
+      //System.out.println("[Tracker] find");
       BufferedImage inputImage = _screenGrabber.grab();
       BufferedImage targetImage = _target.getBufferedImage();
       return finder.findFirstGoodMatch(inputImage, targetImage);
@@ -261,7 +261,7 @@ public class Tracker extends Thread {
 
    
    FindResult findTargetInRegion(Rectangle region){
-      System.out.println("[Tracker] find in region");
+      //System.out.println("[Tracker] find in region");
       BufferedImage inputImage = _screenGrabber.grab();
       BufferedImage regionImage = crop(inputImage, region);
       BufferedImage targetImage = _target.getBufferedImage();
@@ -313,8 +313,8 @@ public class Tracker extends Thread {
       
       FindResult m = findTargetInRegion(_match);
 
-      if (m == null)
-         System.out.println("[Tracker] Pattern is not seen in the same location.");
+//      if (m == null)
+//         System.out.println("[Tracker] Pattern is not seen in the same location.");
 //      
       return m != null;
       
@@ -327,7 +327,7 @@ public class Tracker extends Thread {
       running = true;
 
       // Looking for the target for the first time
-      System.out.println("[Tracker] Looking for the target for the first time");
+      //System.out.println("[Tracker] Looking for the target for the first time");
       
       _match = null;
       while (running && (_match == null)){      
@@ -378,10 +378,10 @@ public class Tracker extends Thread {
       for (TrackerListener listener : _listeners){
          listener.targetFoundFirstTime(_target,match);
       }
-      _target.setX(_match.x);
-      _target.setY(_match.y);
-      _target.setWidth(_match.width);
-      _target.setHeight(_match.height);
+      _target.setX(match.x);
+      _target.setY(match.y);
+      _target.setWidth(match.width);
+      _target.setHeight(match.height);
       _target.setFound(true);
    }
    
@@ -397,6 +397,11 @@ public class Tracker extends Thread {
       for (TrackerListener listener : _listeners){
          listener.targetFoundAgain(_target,match);
       }
+      _target.setX(match.x);
+      _target.setY(match.y);
+      _target.setWidth(match.width);
+      _target.setHeight(match.height);
+      _target.setFound(true);
    }
 
    public void stopTracking(){

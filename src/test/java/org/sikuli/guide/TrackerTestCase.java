@@ -1,14 +1,16 @@
 package org.sikuli.guide;
 
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+
 import javax.imageio.ImageIO;
 
+import org.junit.Before;
+import org.junit.Test;
 import org.sikuli.cv.FindResult;
 
 public class TrackerTestCase {
@@ -117,14 +119,10 @@ public class TrackerTestCase {
 
          @Override
          public void targetFoundAgain(Target target, FindResult match) {
-            // TODO Auto-generated method stub
-            
          }
 
          @Override
          public void targetNotFound(Target target) {
-            // TODO Auto-generated method stub
-            
          }
          
       });
@@ -140,5 +138,5 @@ public class TrackerTestCase {
       
    }
    
-
+   
 }

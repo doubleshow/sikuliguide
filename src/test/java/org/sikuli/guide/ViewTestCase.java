@@ -20,6 +20,7 @@ import javax.swing.event.ListDataListener;
 
 import org.junit.Test;
 import org.sikuli.cv.FindResult;
+import org.sikuli.guide.SideRelationship.Side;
 import org.sikuli.guide.StepView;
 
 
@@ -99,6 +100,55 @@ class FixtureFactory {
 }
 
 public class ViewTestCase {
+   
+   private static File ROOT = new File("src/test/resources");
+
+   
+   @Test
+   public void testSoundIcon() throws InterruptedException, IOException, AWTException{
+      
+      Step step = new Step();      
+      
+      
+      Circle circle = new Circle(0,0,0,0);
+      circle.setForeground(Color.red);
+      step.addSprite(circle);
+      
+      
+      
+      BufferedImage image = ImageIO.read(new File(ROOT, "soundIcon.png"));
+         
+      Target target = new DefaultTarget(image);
+      Relationship r = new SideRelationship(target, circle, Side.SURROUND);
+      
+      Tracker tracker = new Tracker(target);
+      tracker.setScreenGrabber(new DesktopScreenGrabber());
+      tracker.start();
+      
+      StepOverlayView view = new StepOverlayView(step);
+      view.setVisible(true);
+   
+      Object lock = new Object();
+      synchronized(lock){
+         lock.wait();
+      }
+
+   }
+   
+   @Test
+   public void testStepOverlayView() throws InterruptedException{
+      
+      Step step = FixtureFactory.createStep();
+      
+      StepOverlayView view = new StepOverlayView(step);
+      view.setVisible(true);
+   
+      Object lock = new Object();
+      synchronized(lock){
+         lock.wait();
+      }
+
+   }
    
    
    @Test
