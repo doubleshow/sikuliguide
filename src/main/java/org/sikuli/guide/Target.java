@@ -8,23 +8,54 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
 interface Target extends Sprite {
-   public BufferedImage getImage();
+   public BufferedImage getBufferedImage();
    public boolean isFound();
    public void setFound(boolean visible);
 }
 
-class DefaultTarget extends DefaultSprite implements Target {
-   public BufferedImage getImage(){
-      return null;
+class ContextTarget extends DefaultSprite implements Target {
+   
+   
+   private AbstractContextImage contextImage;
+   ContextTarget(AbstractContextImage contextImage){
+      this.contextImage = contextImage;
+   }   
+   
+   BufferedImage crop(BufferedImage src, Rectangle rect){
+      BufferedImage dest = new BufferedImage((int)rect.getWidth(), (int)rect.getHeight(), BufferedImage.TYPE_INT_RGB);
+      Graphics g = dest.getGraphics();
+      g.drawImage(src, 0, 0, (int)rect.getWidth(), (int)rect.getHeight(), (int)rect.getX(), (int)rect.getY(),  (int)rect.getX() +  (int)rect.getWidth(),  (int)rect.getY() + (int)rect.getHeight(), null);
+      g.dispose();
+      return dest;
+   }
+
+   
+   @Override
+   public BufferedImage getBufferedImage(){      
+      Rectangle area = getBounds();      
+      return crop(contextImage.getBufferedImage(), area);
    }
    
    boolean visible = false;
+
+   @Override
    public boolean isFound(){
       return false;
    }
    
+   @Override
    public void setFound(boolean visible){
       this.visible = visible;
+   }
+
+
+   public void setContextImage(ContextImage contextImage) {
+      this.contextImage = contextImage;
+   }
+
+
+   public AbstractContextImage getContextImage() {
+      return contextImage;
    }
 }
 

@@ -246,7 +246,7 @@ public class Tracker extends Thread {
    FindResult findTarget(){
       System.out.println("[Tracker] find");
       BufferedImage inputImage = _screenGrabber.grab();
-      BufferedImage targetImage = _target.getImage();
+      BufferedImage targetImage = _target.getBufferedImage();
       return finder.findFirstGoodMatch(inputImage, targetImage);
    }
    
@@ -264,7 +264,7 @@ public class Tracker extends Thread {
       System.out.println("[Tracker] find in region");
       BufferedImage inputImage = _screenGrabber.grab();
       BufferedImage regionImage = crop(inputImage, region);
-      BufferedImage targetImage = _target.getImage();
+      BufferedImage targetImage = _target.getBufferedImage();
       
       return finder.findFirstGoodMatch(regionImage, targetImage);
    }
@@ -389,6 +389,8 @@ public class Tracker extends Thread {
       for (TrackerListener listener : _listeners){
          listener.targetNotFound(_target);
       }
+      
+      _target.setFound(false);
    }
    
    private void notifyTargetFoundAgain(FindResult match) {

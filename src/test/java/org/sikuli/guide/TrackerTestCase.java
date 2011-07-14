@@ -34,7 +34,7 @@ public class TrackerTestCase {
       frame3 = ImageIO.read(new File(ROOT,"frameNoSystemPrefsWindow.png"));
 
       BufferedImage targetImage = ImageIO.read(new File(ROOT,"softwareupdate.png"));
-      when(target.getImage()).thenReturn(targetImage);
+      when(target.getBufferedImage()).thenReturn(targetImage);
       
       tracker = new Tracker(target);
       tracker.setScreenGrabber(grabber);

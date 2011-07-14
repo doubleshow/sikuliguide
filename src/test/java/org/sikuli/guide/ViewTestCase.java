@@ -76,6 +76,7 @@ class FixtureFactory {
       step.addSprite(flag);
       step.addSprite(target);
       
+      
       try {
          ContextImage contextImage = new ContextImage(new File(ROOT, "screen.png"));
          step.setContextImage(contextImage);
@@ -87,11 +88,11 @@ class FixtureFactory {
    }
 
    public static Target createTarget() {
-      Target target = new DefaultTarget();
-      target.setX(265);
-      target.setY(190);
-      target.setWidth(50);
-      target.setHeight(30);
+      Target target = mock(Target.class);
+      when(target.getX()).thenReturn(265);
+      when(target.getY()).thenReturn(190);
+      when(target.getWidth()).thenReturn(50);
+      when(target.getHeight()).thenReturn(30);
       return target;
    }
 
@@ -106,7 +107,7 @@ public class ViewTestCase {
       BufferedImage targetImage = ImageIO.read(new File("src/test/resources/tracker", "mouse.png")); 
       
       Target target = mock(Target.class);
-      when(target.getImage()).thenReturn(targetImage);
+      when(target.getBufferedImage()).thenReturn(targetImage);
 
       Tracker tracker = new Tracker(target);
       
