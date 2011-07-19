@@ -70,7 +70,7 @@ class DefaultSprite implements Sprite {
       o.height = height;
       o.backgroundColor = backgroundColor;
       o.foregroundColor = foregroundColor;
-      o.hasShadow = hasShadow;
+      o.withShadow = withShadow;
       o.opacity = opacity;
       return o;
    }
@@ -99,7 +99,7 @@ class DefaultSprite implements Sprite {
    public int padding=5;
 
    @Attribute
-   private boolean hasShadow;
+   private boolean withShadow;
    
    @Attribute 
    private float opacity = 1f;
@@ -178,12 +178,12 @@ class DefaultSprite implements Sprite {
       
    @Override
    public void setWithShadow(boolean hasShadow) {
-      this.hasShadow = hasShadow;
+      this.withShadow = hasShadow;
    }
    
    @Override
    public boolean isWithShadow() {
-      return hasShadow;
+      return withShadow;
    }
    
    @Override

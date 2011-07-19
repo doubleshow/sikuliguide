@@ -48,5 +48,28 @@ public class Step implements PropertyChangeListener {
    public void propertyChange(PropertyChangeEvent e) {
       
    }
+   
+   private List<Relationship> relationships = new ArrayList<Relationship>();
+   public void addRelationship(Relationship rel) {
+      relationships.add(rel);
+   }
+
+   public List<Relationship> getRelationships() {
+      return relationships;
+   }
+   
+   public void removeRelationship(Relationship rel) {
+      relationships.remove(rel);      
+   }
+   
+   public void removeRelationship(Sprite s) {
+      List<Relationship> newList = new ArrayList<Relationship>();
+      for (Relationship rel : relationships){         
+         if (rel.getParent() != s && rel.getDependent() != s){
+            newList.add(rel);
+         }
+      }
+      relationships = newList;
+   }
 
 }
