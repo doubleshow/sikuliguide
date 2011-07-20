@@ -12,6 +12,9 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import org.sikuli.ui.Slide;
+import org.sikuli.ui.SlideEditView;
+
 class StepThumbView extends JPanel {
    
    private Step _step;   
@@ -77,34 +80,59 @@ class StepThumbView extends JPanel {
    }
 }
 
-public class StepView extends JComponent {
+public class StepView extends SlideEditView {
 
    protected Step _step;   
-   private void updateStep(){      
+   
+   JPanel contentLayer = new JPanel();
+   
+   private void updateStep(){            
+      contentLayer.removeAll();
       
-      removeAll();
+      if (_step == null)
+         return;
       
       for (Sprite sprite : _step.getSprites()){       
          SpriteView view = ViewFactory.createView(sprite);
-         add(view); 
+         contentLayer.add(view); 
       }      
       
       ContextImageView view = ViewFactory.createView(_step.getContextImage());
-      add(view);
+      contentLayer.add(view);
+      repaint();
    }
    
    
-   
+   @Override
+   public void refresh() {
+      super.refresh();
+      updateStep();
+   }
+
    public void setStep(Step step){
       _step = step;
+      setSlide(step);
       updateStep();
    }
    
+   @Override
+   public void setSlide(Slide slide) {
+      super.setSlide(slide);
+      _step = (Step) slide;
+      refresh();
+   }
+
+
+
    StepView(){
       setLayout(null);      
       // It turns out these are useful after all
       // so that it works on Windows
       setBackground(null);  
+      
+      contentLayer.setLayout(null);
+      contentLayer.setSize(640,480);//_step.getContextImage().getWidth(), _step.getContextImage().getHeight());
+      add(contentLayer);
    }
    
    StepView(Step step){

@@ -65,10 +65,10 @@ public class StepEditViewTestCase {
             return new ScrollPaneFrame(stepView);  
           }
       });
+      f.setPreferredSize(new Dimension(800,600));
       
       window = new FrameFixture(f);
       window.show(); // shows the frame to test
-      window.resizeTo(new Dimension(800,600));
       
       textPropertyEditor = window.panel(withNameShowingNotRequired("TextPropertyEditor"));
       textView = window.panel("Text");

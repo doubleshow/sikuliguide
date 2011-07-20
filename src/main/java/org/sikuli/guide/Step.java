@@ -9,12 +9,17 @@ import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.event.ChangeListener;
+import javax.swing.undo.AbstractUndoableEdit;
+import javax.swing.undo.CannotUndoException;
 
+import org.sikuli.ui.DefaultSlide;
+import org.sikuli.ui.Slide;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 
 @Root
-public class Step implements PropertyChangeListener {
+public class Step extends DefaultSlide implements PropertyChangeListener {
    
    @ElementList
    ArrayList<Sprite> _spriteList = new ArrayList<Sprite>();
@@ -33,15 +38,39 @@ public class Step implements PropertyChangeListener {
    
    public void addSprite(Sprite sprite) {
       _spriteList.add(sprite);      
-      sprite.addPropertyChangeListener(this);      
+      sprite.addPropertyChangeListener(this);   
+      fireStateChanged();
       //fireDataContentsChanged();   
+   }
+   
+   public void addSprite(int index, Sprite sprite){
+      _spriteList.add(index,sprite);      
+      sprite.addPropertyChangeListener(this);   
+      fireStateChanged();      
    }
    
    public void removeSprite(Sprite sprite){
       _spriteList.remove(sprite);      
       sprite.removePropertyChangeListener(this);            
+      fireStateChanged();
       //fireDataContentsChanged();
    }
+   
+   public void removeSprite(final int index){
+      final Sprite spriteRemoved = _spriteList.remove(index);      
+      spriteRemoved.removePropertyChangeListener(this);            
+      fireStateChanged();
+      //fireDataContentsChanged();
+      
+      undoableEditSupport.postEdit(new AbstractUndoableEdit(){
+         public void undo() throws CannotUndoException {
+            super.undo();
+            addSprite(index, spriteRemoved);
+         }
+      });      
+
+   }
+
 
 
    @Override

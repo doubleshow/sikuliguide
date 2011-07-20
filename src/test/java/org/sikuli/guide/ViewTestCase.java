@@ -64,6 +64,28 @@ class FixtureFactory {
    
    final static String ROOT = "src/test/resources";
    
+   static Step createStep1(){
+      Step step = new Step();            
+      
+      final Circle circle = FixtureFactory.createCircle();
+      final FlagText flag = FixtureFactory.createFlagText();
+      final Target target = FixtureFactory.createTarget();
+      
+      step.addSprite(circle);
+      step.addSprite(flag);
+      step.addSprite(target);
+      
+      
+      try {
+         ContextImage contextImage = new ContextImage(new File(ROOT, "screen.png"));
+         step.setContextImage(contextImage);
+      } catch (IOException e) {
+         e.printStackTrace();
+      }
+      
+      return step;
+   }
+   
    static Step createStep(){
       Step step = new Step();            
       

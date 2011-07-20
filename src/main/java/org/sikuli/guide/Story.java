@@ -9,11 +9,13 @@ import javax.swing.event.EventListenerList;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
+import org.sikuli.ui.DefaultSlide;
+import org.sikuli.ui.DefaultSlideDeck;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 
 @Root
-public class Story implements PropertyChangeListener {
+public class Story extends DefaultSlideDeck implements PropertyChangeListener {
    
    @ElementList
    ArrayList<Step> _stepList = new ArrayList<Step>();

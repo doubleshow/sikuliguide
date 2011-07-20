@@ -3,7 +3,11 @@ package org.sikuli.guide;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.refEq;
@@ -11,9 +15,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JScrollPane;
+import javax.swing.ListCellRenderer;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
@@ -24,6 +32,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 //import org.uispec4j.Panel;
+import org.sikuli.ui.Slide;
 
 class ScrollPaneFrame extends JFrame {
    
@@ -255,4 +264,5 @@ class ViewTester {
    
    
 }
+
 

@@ -7,6 +7,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+import org.sikuli.ui.Slide;
+
 class StepEditView extends StepView {
  
    SpriteView selectedSpriteView;
@@ -16,12 +18,20 @@ class StepEditView extends StepView {
    ComponentDragMover cm = new ComponentDragMover();
    TextPropertyEditor _textPropertyEditor = new TextPropertyEditor();
    
-   
-   public StepEditView(Step step) {
-      super(step);
-      setFocusable(true);
+   public StepEditView() {
       
-      for (Component comp : getComponents()){
+      _controlBox = new ControlBox();
+      _controlBoxView = new ControlBoxView(_controlBox);
+      
+      _textPropertyEditor.setVisible(false);
+      _controlBoxView.setVisible(false);
+      
+      add(_controlBoxView,0);
+      add(_textPropertyEditor,0);
+   }
+   
+   private void addListenersToSprites(){
+      for (Component comp : contentLayer.getComponents()){
          if (comp instanceof SpriteView){
             SpriteView spriteView = (SpriteView) comp;
             
@@ -49,21 +59,32 @@ class StepEditView extends StepView {
             
             comp.addMouseListener(selectionTool);
             comp.addKeyListener(keyTool);
-         }         
-      }   
-      
+         }   
+      }
+   }
+   
+   @Override
+   public void setSlide(Slide slide){
+      super.setSlide(slide);
+      addListenersToSprites();
+   }
+   
+   @Override
+   public void setStep(Step step) {
+      super.setStep(step);
+      addListenersToSprites();
+   }
 
-      
-      
-      _controlBox = new ControlBox();
-      _controlBoxView = new ControlBoxView(_controlBox);
-      
-      _textPropertyEditor.setVisible(false);
-      _controlBoxView.setVisible(false);
-      
-      add(_controlBoxView,0);
-      add(_textPropertyEditor,0);
-//      addKeyListener(keyTool);
+   @Override
+   public void refresh(){
+      super.refresh();
+      addListenersToSprites();
+   }
+
+
+   public StepEditView(Step step) {
+      this();
+      setStep(step);
    }
    
    ControlBox _controlBox;
