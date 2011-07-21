@@ -84,6 +84,7 @@ public class SlideDeckEditor extends JPanel {
    public void setSlideDeck(SlideDeck slideDeck) {
       this.slideDeck = slideDeck;
       listView.setListData(slideDeck.getSlides().toArray());
+      listView.setSlideDeck(slideDeck);
       
       // TODO: Dry this (cf AddNewSlideAction)
       for (Slide slide : slideDeck.getSlides()){
@@ -205,7 +206,7 @@ public class SlideDeckEditor extends JPanel {
       
       listView.setDragEnabled(true);
       //listView.setTransferHandler(new ArrayListTransferHandler());
-      
+      listView.setSlideDeck(getSlideDeck());
       listView.setMinimumSize(new Dimension(120,150));
       listView.addListSelectionListener(new ListSelectionListener(){
 

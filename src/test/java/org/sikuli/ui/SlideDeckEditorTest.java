@@ -166,6 +166,96 @@ public class SlideDeckEditorTest {
    }
    
    public static class UserEditInteractionText extends WithConcreteFixtures {
+
+      @Test
+      public void testCutAndPasteAndUndo() throws InterruptedException{
+
+         int n = slideDeck.size();
+         
+         fListView.clickItem(0);
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_X);
+         fListView.releaseKey(KeyEvent.VK_META);
+
+         fListView.clickItem(0);
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_V);
+         fListView.releaseKey(KeyEvent.VK_META);                 
+         
+         editor.undoAction().actionPerformed(mockedActionEvent);         
+         fListView.requireItemCount(n-1);
+         
+         editor.undoAction().actionPerformed(mockedActionEvent);         
+         fListView.requireItemCount(n);
+      }
+      
+      @Test
+      public void testCopyAndPasteAndUndo() throws InterruptedException{
+
+         int n = slideDeck.size();
+         
+         fListView.clickItem(0);
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_C);
+         fListView.releaseKey(KeyEvent.VK_META);
+
+         fListView.clickItem(0);
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_V);
+         fListView.releaseKey(KeyEvent.VK_META);                 
+         
+         editor.undoAction().actionPerformed(mockedActionEvent);         
+         fListView.requireItemCount(n);         
+      }
+      
+      @Test
+      public void testCutAndPasteAndPaste() throws InterruptedException{
+         
+         int n = slideDeck.size();
+         
+         fListView.clickItem(0);
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_X);
+         fListView.releaseKey(KeyEvent.VK_META);
+         fListView.requireItemCount(n-1);
+
+         fListView.clickItem(0);
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_V);
+         fListView.releaseKey(KeyEvent.VK_META);        
+         fListView.requireItemCount(n);
+         
+         assertThat(slideDeck.getSlides().get(0), sameInstance(slide1));
+         
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_V);
+         fListView.releaseKey(KeyEvent.VK_META);
+         fListView.requireItemCount(n+1);         
+      }
+      
+      @Test
+      public void testCopyAndPasteAndPaste() throws InterruptedException{
+         
+         int n = slideDeck.size();
+         
+         fListView.clickItem(0);
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_C);
+         fListView.releaseKey(KeyEvent.VK_META);
+         fListView.requireItemCount(n);
+
+         fListView.clickItem(1);
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_V);
+         fListView.releaseKey(KeyEvent.VK_META);        
+         fListView.requireItemCount(n+1);
+         
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_V);
+         fListView.releaseKey(KeyEvent.VK_META);
+         fListView.requireItemCount(n+2);         
+      }
+
       
       @Test
       public void testClickToSelectAndDeleteSlide(){
@@ -192,16 +282,9 @@ public class SlideDeckEditorTest {
       
       @Test
       public void testEditTheContentOfSlide() throws InterruptedException{
-         JTextComponentFixture editField = new JTextComponentFixture(window.robot, ((TestSlideEditView) editView).editField);
-         
+         JTextComponentFixture editField = new JTextComponentFixture(window.robot, ((TestSlideEditView) editView).editField);         
          editField.enterText("new");
-         window.button("Update").click();
-                  
-               Object lock = new Object();
-      synchronized(lock){
-         lock.wait();
-      }
-
+         window.button("Update").click();                  
       }
    }
    
@@ -228,10 +311,9 @@ public class SlideDeckEditorTest {
          
          assertThat(editor.undoManager, notNullValue());
          
-         editor.undoManager.undo();         
-         editor.refresh();
-
-         
+//         editor.undoManager.undo();         
+//         editor.refresh();
+//         
          ef.getContentPane().add(editor);
          ef.pack();        
          ef.setVisible(true);

@@ -1,5 +1,7 @@
 package org.sikuli.ui;
 
+import java.io.Serializable;
+
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.EventListenerList;
@@ -8,7 +10,7 @@ import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoableEditSupport;
 
-public class DefaultSlide implements Slide{
+public class DefaultSlide implements Slide, Serializable{
 
    private String name = "";
    @Override
@@ -45,8 +47,7 @@ public class DefaultSlide implements Slide{
       }
    }
    
-   private EventListenerList listenerList = new EventListenerList();
-   
+   transient private EventListenerList listenerList = new EventListenerList();   
    @Override
    public void addChangeListener(ChangeListener l) {
       listenerList.add(ChangeListener.class, l);
@@ -58,8 +59,7 @@ public class DefaultSlide implements Slide{
    }
    
    
-   protected UndoableEditSupport undoableEditSupport = new UndoableEditSupport(this);
-   
+   transient protected UndoableEditSupport undoableEditSupport = new UndoableEditSupport(this);   
    @Override
    public void addUndoableEditListener(
          UndoableEditListener undoableEditListener) {

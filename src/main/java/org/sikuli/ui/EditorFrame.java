@@ -48,18 +48,23 @@ public class EditorFrame extends JFrame{
    }
 
    
-   / todo: this is ungly, fix
+   // todo: this is ungly, fix
    SlideDeckEditor editor;   
    private UndoManager undoManager;
    public void setUndoManager(final UndoManager undoManager) {
       this.undoManager = undoManager;      
-      undoMenuItem.setAction(new AbstractAction(){
+      undoMenuItem.setAction(new AbstractAction("Undo"){
 
          @Override
          public void actionPerformed(ActionEvent e) {
             UndoManagerHelper.getUndoAction(undoManager).actionPerformed(e);
             editor.refresh();
             
+         }
+         
+         @Override
+         public boolean isEnabled(){
+            return undoManager.canUndo();
          }
          
       });

@@ -3,6 +3,9 @@ package org.sikuli.ui;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.EventListenerList;
 import javax.swing.event.UndoableEditListener;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotUndoException;
@@ -34,8 +37,41 @@ public class DefaultSlideDeck implements SlideDeck {
             slides.add(index, slideToDelete);
          }
       });
+      
+      fireStateChanged();
+   }
+   
+   
+   @Override
+   public void remove(final Slide slide) {
+      final int index = slides.indexOf(slide);
+      slides.remove(index);
+      
+      undoableEditSupport.postEdit(new AbstractUndoableEdit(){
+         public void undo() throws CannotUndoException {
+            super.undo();
+            slides.add(index, slide);
+         }
+      });
+      
+      fireStateChanged();
    }
 
+
+   @Override
+   public void add(int index, final Slide slide){
+      slides.add(index, slide);   
+      
+      undoableEditSupport.postEdit(new AbstractUndoableEdit(){
+         public void undo() throws CannotUndoException {
+            super.undo();
+            slides.remove(slide);
+         }
+      });      
+      
+      fireStateChanged();
+   }
+   
    @Override
    public void add(final Slide slide) {
       slides.add(slide);   
@@ -46,10 +82,33 @@ public class DefaultSlideDeck implements SlideDeck {
             slides.remove(slide);
          }
       });
+      
+      fireStateChanged();
    }
    
-   UndoableEditSupport undoableEditSupport = new UndoableEditSupport(this);
-  
+   
+   protected void fireStateChanged(){
+      ChangeEvent evt = new ChangeEvent(this);
+      Object[] listeners = listenerList.getListenerList();
+      for (int i=0; i<listeners.length; i+=2) {
+          if (listeners[i]==ChangeListener.class) {
+              ((ChangeListener)listeners[i+1]).stateChanged(evt);
+          }
+      }
+   }
+   
+   transient private EventListenerList listenerList = new EventListenerList();   
+   @Override
+   public void addChangeListener(ChangeListener l) {
+      listenerList.add(ChangeListener.class, l);
+   }
+
+   @Override
+   public void removeChangeListener(ChangeListener l) {
+      listenerList.remove(ChangeListener.class, l);
+   }
+   
+   transient UndoableEditSupport undoableEditSupport = new UndoableEditSupport(this);  
    @Override
    public void addUndoableEditListener(
          UndoableEditListener undoableEditListener) {
