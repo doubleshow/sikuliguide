@@ -12,6 +12,14 @@ import javax.swing.undo.UndoableEditSupport;
 
 public class DefaultSlide implements Slide, Serializable{
 
+   public DefaultSlide(String name){
+      this.name = name;
+   }
+   
+   protected DefaultSlide(){
+      
+   }
+   
    private String name = "";
    @Override
    public String getName() {

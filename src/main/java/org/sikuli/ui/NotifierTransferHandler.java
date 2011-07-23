@@ -21,8 +21,10 @@ class NotifierTransferHandler extends TransferHandler {
 
    public boolean canImport(JComponent comp, DataFlavor[] transferFlavors){ 
       for(int i = 0; i<transferFlavors.length; i++){ 
-         if(transferFlavors[i].equals(DataFlavor.stringFlavor)) 
-            return true; 
+//         if(transferFlavors[i].equals(DataFlavor.stringFlavor)) 
+//            return true; 
+         if (transferFlavors[i].equals(new DataFlavor(Slide.class, DataFlavor.javaSerializedObjectMimeType)))
+            return true;
       } 
       return false; 
    } 
@@ -107,9 +109,9 @@ class ListClipboardOwner implements ClipboardOwner{
 
  public ListClipboardOwner(JList list){ 
     this.list = list; 
-    index = list.getSelectedIndex(); 
-    list.putClientProperty(CLIP_BOARD_OWNER, this); 
-    list.paintImmediately(list.getCellBounds(index, index)); 
+//    index = list.getSelectedIndex(); 
+//    list.putClientProperty(CLIP_BOARD_OWNER, this); 
+//    list.paintImmediately(list.getCellBounds(index, index)); 
  } 
 
  public int getIndex(){ 
@@ -117,8 +119,8 @@ class ListClipboardOwner implements ClipboardOwner{
  } 
 
  public void lostOwnership(Clipboard clipboard, Transferable contents){ 
-    if(list.getClientProperty(CLIP_BOARD_OWNER)==this) 
-       list.putClientProperty(CLIP_BOARD_OWNER, null); 
-    list.paintImmediately(list.getCellBounds(index, index)); 
+//    if(list.getClientProperty(CLIP_BOARD_OWNER)==this) 
+//       list.putClientProperty(CLIP_BOARD_OWNER, null); 
+//    list.paintImmediately(list.getCellBounds(index, index)); 
  } 
 }

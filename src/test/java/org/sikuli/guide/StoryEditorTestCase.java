@@ -14,6 +14,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.ListCellRenderer;
+import javax.swing.ListSelectionModel;
 
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiQuery;
@@ -27,6 +28,8 @@ import org.junit.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
+import org.sikuli.ui.DefaultSlide;
+import org.sikuli.ui.DefaultSlideDeck;
 import org.sikuli.ui.Slide;
 import org.sikuli.ui.SlideDeck;
 import org.sikuli.ui.SlideDeckEditor;
@@ -38,6 +41,7 @@ public class StoryEditorTestCase {
 
       protected Slide slide0;
       protected Slide slide1;
+      protected Slide slide2;
       protected Slide newSlide;
       protected SlideDeck slideDeck;
       protected List<Slide> slides;
@@ -61,27 +65,39 @@ public class StoryEditorTestCase {
          frame.setContentPane(editor);
          frame.pack();
 
-         window = new FrameFixture(frame);
-         window.show(); // shows the frame to test
 
 
          slide0 = FixtureFactory.createStep();         
          slide0.setName("Step 0");
          slide1 = FixtureFactory.createStep1();
          slide1.setName("Step 1");
+         slide2 = FixtureFactory.createStep1();
+         slide2.setName("Step 2");
 
-         slideDeck = new Story();
-         slideDeck.add(slide0);
-         slideDeck.add(slide1);
+         
+//         slideDeck = new DefaultSlideDeck();
+//         slideDeck.insertElementAt(new DefaultSlide("Slide 0"),0);
+//         slideDeck.insertElementAt(new DefaultSlide("Slide 1"),0);
+//         slideDeck.insertElementAt(new DefaultSlide("Slide 2"),0);
+
+       slideDeck = new Story();
+         slideDeck.insertElementAt(slide0,0);
+         slideDeck.insertElementAt(slide1,1);
+         slideDeck.insertElementAt(slide2,2);
 
          editor.setSlideDeck(slideDeck);
+         
          editor.setSlideEditView(new StepEditView());
 
-         SlideDeckListView listView = new SlideDeckListView(); 
-         //listView.setCellRenderer(new TestStepCellRenderer());
-         listView.setCellRenderer(new MyCellRenderer());
+         SlideDeckListView listView = new SlideDeckListView();
+         listView.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+         listView.setCellRenderer(new TestStepCellRenderer());
+//         listView.setCellRenderer(new MyCellRenderer());
          editor.setSlideDeckListView(listView);
 
+         
+         window = new FrameFixture(frame);
+         window.show(); // shows the frame to test
       }
 
       @After
@@ -91,12 +107,12 @@ public class StoryEditorTestCase {
 
       @Test
       public void testDeleteSlidesThenUndo() throws InterruptedException {         
-         int n = slideDeck.size();
-         slideDeck.remove(0);       
-         slideDeck.remove(0);      
+         int n = slideDeck.getSize();
+         slideDeck.removeElement(slide0);       
+         slideDeck.removeElement(slide1);      
          editor.undoAction().actionPerformed(mockedActionEvent);
          editor.undoAction().actionPerformed(mockedActionEvent);
-         assertThat(slideDeck.size(), equalTo(n));         
+         assertThat(slideDeck.getSize(), equalTo(n));         
       }
       
       @Test
@@ -124,7 +140,7 @@ public class StoryEditorTestCase {
       @Test
       public void testManually() throws InterruptedException{
 
-         editor.getEditActionFactory().addNewSlideToEndAction(slide1).actionPerformed(null);
+//         editor.getEditActionFactory().addNewSlideToEndAction(slide1).actionPerformed(null);
 
 
          Object lock = new Object();
@@ -206,8 +222,9 @@ class MyCellRenderer extends JPanel implements ListCellRenderer {
 
       Step step = (Step) value;
       _stepView.setStep(step);
-      setPreferredSize(new Dimension(150,150));
-
+      _stepView.setPreferredSize(new Dimension(100,100));
+      setPreferredSize(new Dimension(120,120));
+      
       if (isSelected){
          setBorder(BorderFactory.createLineBorder(Color.red, 5));
       }else{

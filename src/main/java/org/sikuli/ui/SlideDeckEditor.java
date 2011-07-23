@@ -30,6 +30,8 @@ import javax.swing.JSplitPane;
 import javax.swing.TransferHandler;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.UndoableEditEvent;
@@ -38,6 +40,8 @@ import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEdit;
 import javax.swing.undo.UndoableEditSupport;
+
+import org.sikuli.guide.Step;
 
 import quicktime.std.comp.Component;
 
@@ -68,23 +72,68 @@ public class SlideDeckEditor extends JPanel {
    }
 
    protected void setSelectedSlideIndex(int index) {
-      if (index >= 0 && index < getSlideDeck().getSlides().size()){
-         editView.setSlide(getSlideDeck().getSlides().get(index));
-         listView.setSelectedIndex(index);
+      if (index >= 0 && index < getSlideDeck().getSize()){
+         editView.setSlide((Slide)getSlideDeck().getElementAt(index));
          listView.ensureIndexIsVisible(index);
-      }      
+         listView.setSelectedIndex(index);    
+      }else{
+         editView.setSlide(null);
+         listView.setSelectedIndex(-1);         
+      }
    }
 
    SlideDeckEditor(SlideDeck document){
       this();
       setSlideDeck(document);      
    }
-
+   
+   int getSelectedIndex(){
+      return listView.getSelectedIndex();
+   }
+   
+   
    private SlideDeck slideDeck;
    public void setSlideDeck(SlideDeck slideDeck) {
       this.slideDeck = slideDeck;
-      listView.setListData(slideDeck.getSlides().toArray());
-      listView.setSlideDeck(slideDeck);
+      //listView.setListData(slideDeck.getSlides().toArray());
+      listView.setModel(slideDeck);
+      
+      slideDeck.addListDataListener(new ListDataListener(){
+
+         @Override
+         public void contentsChanged(ListDataEvent arg0) {
+         }
+
+         @Override
+         public void intervalAdded(ListDataEvent arg0) {
+         }
+
+         @Override
+         public void intervalRemoved(ListDataEvent e) {
+            //int index = getSelectedIndex();
+            System.out.println(String.format("list element removed notified from %d to %d", e.getIndex0(), e.getIndex1()));
+
+            Slide editingSlide = editView.getSlide();
+            
+            if (getSlideDeck().getSize()==0){
+               System.out.println("list is empty");              
+               setSelectedSlideIndex(-1);
+            
+            }else {//if (getSlideDeck().getSlides().indexOf(editingSlide) >= 0){               
+               // if the slide being edited is no longer in the list 
+               // select next slide or last slide
+               int indexToSelect = Math.min(e.getIndex0(),e.getIndex0());
+               System.out.println("automatically select " + indexToSelect);
+
+               setSelectedSlideIndex(indexToSelect);
+            }
+         }         
+         
+      });
+      
+      
+      //listView.setPreferredSize(new Dimension(100,400));
+//      listView.setSlideDeck(slideDeck);
       
       // TODO: Dry this (cf AddNewSlideAction)
       for (Slide slide : slideDeck.getSlides()){
@@ -112,7 +161,6 @@ public class SlideDeckEditor extends JPanel {
    public void refresh() {   
       if (getSlideDeck()==null)
          return;
-
       
       for (Slide slide : slideDeck.getSlides()){
          slide.removeChangeListener(slideListener);
@@ -121,17 +169,27 @@ public class SlideDeckEditor extends JPanel {
          slide.addUndoableEditListener(undoManager);         
       }
       
-      int index = listView.getSelectedIndex();
-      listView.setListData(getSlideDeck().getSlides().toArray());
-      listView.setSelectedIndex(index);
+//      int index = listView.getSelectedIndex();
+//      listView.setListData(getSlideDeck().getSlides().toArray());
+//      listView.setSelectedIndex(index);
 
       if (getSlideDeck().getSlides().size() == 0){
          editView.setSlide(null);
       }      
    }
+   
+   
+   private Slide getSelectedSlide(){
+      int index = listView.getSelectedIndex();
+      if (index < 0)
+         return null;
+      else
+         return (Slide) getSlideDeck().getElementAt(index);
+   }
 
    public void setSlideEditView(SlideEditView view){
       editView = view;
+      editView.setSlide(getSelectedSlide());
       splitPane.setRightComponent(editView);      
       refresh();
    }
@@ -158,10 +216,10 @@ public class SlideDeckEditor extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                final int index = listView.getSelectedIndex();
-               getSlideDeck().remove(index);
-               refresh();
-
+               Slide slide = (Slide) getSlideDeck().getElementAt(index);
+               getSlideDeck().removeElement(slide);
                listView.setSelectedIndex(Math.max(index-1,0));
+               refresh();
             }
 
          };
@@ -173,19 +231,18 @@ public class SlideDeckEditor extends JPanel {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-               getSlideDeck().add(newSlide);
+               getSlideDeck().insertElementAt(newSlide,getSlideDeck().getSize());
                
                newSlide.addChangeListener(new ChangeListener(){
                   @Override
                   public void stateChanged(ChangeEvent arg0) {
-                     System.out.println("called");
                      refresh();
                   }
                });               
                
                refresh();
 
-               listView.setSelectedIndex(getSlideDeck().size()-1);
+               listView.setSelectedIndex(getSlideDeck().getSize()-1);
             }
 
          };
@@ -206,14 +263,22 @@ public class SlideDeckEditor extends JPanel {
       
       listView.setDragEnabled(true);
       //listView.setTransferHandler(new ArrayListTransferHandler());
-      listView.setSlideDeck(getSlideDeck());
+      //listView.setSlideDeck(getSlideDeck());
+      if (getSlideDeck()!=null)
+         listView.setModel(getSlideDeck());
       listView.setMinimumSize(new Dimension(120,150));
       listView.addListSelectionListener(new ListSelectionListener(){
 
          @Override
-         public void valueChanged(ListSelectionEvent e) {
-            int index = listView.getSelectedIndex();
-            setSelectedSlideIndex(index);
+         public void valueChanged(ListSelectionEvent e) {            
+            System.out.println(String.format("index0:%d, index1:%d, adjusting:%s",e.getFirstIndex(),e.getLastIndex(),e.getValueIsAdjusting()));
+            boolean isOnlyOneItemSelected = listView.getSelectedValues().length == 1;
+            if (isOnlyOneItemSelected){
+               int index =listView.getSelectedIndex();
+               System.out.println(String.format("selecting:%d",index));
+               setSelectedSlideIndex(index);
+            }
+            
          }
 
       });
@@ -224,9 +289,32 @@ public class SlideDeckEditor extends JPanel {
             if (e.getKeyCode() == KeyEvent.VK_DELETE || e.getKeyCode() == KeyEvent.VK_BACK_SPACE ){               
                getEditActionFactory().deleteSelectedSlideAction().actionPerformed(new ActionEvent(this,0,null));
             }
+            
+            if (e.getKeyCode() == KeyEvent.VK_2){
+               System.out.println("key pressed");
+               validate();
+               System.out.println(listView.getBounds());
+               System.out.println(listView.getVisibleRect());
+               System.out.println(listView.getCellBounds(0,3));
+               //listView.ensureIndexIsVisible(0);
+               System.out.println(listView.getFirstVisibleIndex());
+               System.out.println(listView.getLastVisibleIndex());
+               System.out.println(listView.getVisibleRowCount());
+               System.out.println(listView.getFixedCellHeight());
+               System.out.println(listView.getModel().getSize());
+               
+               Step step = (Step) listView.getModel().getElementAt(0);
+               System.out.println("step:"+ step.getSprites().size());
+               
+
+               listView.repaint();
+               listView.paintImmediately(0,0,150,467);
+               listView.setSelectedIndex(2);
+            }
          }
 
       });      
+      
       splitPane.setLeftComponent(listView);      
       refresh();
       listView.setSelectedIndex(0);

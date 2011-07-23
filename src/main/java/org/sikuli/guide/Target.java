@@ -20,7 +20,7 @@ interface Target extends Sprite {
 class DefaultTarget extends DefaultSprite implements Target{
 
    boolean visible = false;
-   BufferedImage image;
+   transient BufferedImage image;
    public DefaultTarget(BufferedImage image) {
       super(0,0,image.getWidth(), image.getHeight());
       this.image = image;

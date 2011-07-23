@@ -21,6 +21,10 @@ import org.simpleframework.xml.Root;
 @Root
 public class Step extends DefaultSlide implements PropertyChangeListener {
    
+   public Step(){
+      super();
+   }
+   
    @ElementList
    ArrayList<Sprite> _spriteList = new ArrayList<Sprite>();
    

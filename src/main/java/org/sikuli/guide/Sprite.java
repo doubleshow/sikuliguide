@@ -6,6 +6,7 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.Serializable;
 
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
@@ -49,7 +50,7 @@ public interface Sprite {
 
 
 @Root
-class DefaultSprite implements Sprite {
+class DefaultSprite implements Sprite, Serializable {
    
    public DefaultSprite(){      
    }
@@ -75,7 +76,7 @@ class DefaultSprite implements Sprite {
       return o;
    }
    
-   protected final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+   transient protected final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
    
    public void addPropertyChangeListener( PropertyChangeListener listener ){
       this.pcs.addPropertyChangeListener( listener );

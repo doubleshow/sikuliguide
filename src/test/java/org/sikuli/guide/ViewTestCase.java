@@ -110,12 +110,21 @@ class FixtureFactory {
       return step;
    }
 
-   public static Target createTarget() {
+   public static Target createMockedTarget() {
       Target target = mock(Target.class);
       when(target.getX()).thenReturn(265);
       when(target.getY()).thenReturn(190);
       when(target.getWidth()).thenReturn(50);
       when(target.getHeight()).thenReturn(30);
+      return target;
+   }
+   
+   public static Target createTarget() {
+      Target target = new DefaultTarget();
+      target.setX(265);
+      target.setX(90);
+      target.setX(50);
+      target.setX(30);
       return target;
    }
 
