@@ -149,7 +149,7 @@ public class SlideDeckEditorTest {
 
    }
 
-   public static class UserSelectionTest extends WithMockedFixtures {
+   public static class UserSlideSelectionTest extends WithConcreteFixtures {
 
       @Test
       public void testSetToAnExistingSlideDeck(){
@@ -176,14 +176,38 @@ public class SlideDeckEditorTest {
          editor.refresh();
          fListView.requireSelection(1);      
       }
+      
+      @Test
+      public void testClickToSelectAndDeleteSlide(){
+         int n = slideDeck.getSlides().size();
+
+         fListView.clickItem(0);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_DELETE);
+
+         fListView.requireItemCount(n-1);
+         assertThat(editor.getSlideDeck().getSize(), equalTo(n-1));
+      }
+
+      @Test
+      public void testClickToSelectAndDeleteSlideUntilEmpty(){
+         fListView.clickItem(0);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_DELETE);
+         fListView.clickItem(0);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_DELETE);
+
+         fListView.requireItemCount(0);
+
+         assertThat(editor.editView.getSlide(), nullValue());
+      }
+
 
    }
 
-   public static class UserEditInteractionText extends WithConcreteFixtures {
+   public static class UserCutCopyPasteTest extends WithConcreteFixtures {
 
       
       @Test
-      public void testCutAndSelectTheNextSlide() throws InterruptedException{
+      public void testCut_AnotherSlideMustBeSelected_1() throws InterruptedException{
          // given slide 0 and slide 1         
          
          // when cut slide 0
@@ -197,7 +221,7 @@ public class SlideDeckEditorTest {
       }
       
       @Test
-      public void testCutAndSelectTheNextSlide_2() throws InterruptedException{
+      public void testCut_AnotherSlideMustBeSelected_2() throws InterruptedException{
          // given slide 0 and slide 1
          
          // when cut slide 1
@@ -211,7 +235,7 @@ public class SlideDeckEditorTest {
       }
       
       @Test
-      public void testCutAndSelectTheNextSlide_empty() throws InterruptedException{
+      public void testCut_NoSlideShouldBeSelectedWhenEmpty() throws InterruptedException{
          // given slide 0 and slide 1
          
          // when cut slide 1 and slide 0
@@ -229,15 +253,10 @@ public class SlideDeckEditorTest {
       }
       
       @Test
-      public void testCutAndSelectTheNextSlide_TwoSlidesAreCut() throws InterruptedException{
+      public void testCutTwoSlides_SlideAfterTheSecondSlideMustBeSelected() throws InterruptedException{
          // given slide 0 and slide 1 and slide 2
          slideDeck.insertElementAt(slide2, 2);
          
-         Object lock = new Object();
-         synchronized(lock){
-            lock.wait();
-         }
-
          // when cut slide 0 and slide 1 
          fListView.clickItem(0);
          fListView.pressKey(KeyEvent.VK_SHIFT);
@@ -252,11 +271,111 @@ public class SlideDeckEditorTest {
          assertThat(editor.editView.getSlide(), sameInstance(slide2));
          
          fListView.requireSelection(0);
+      }
+
+      
+      @Test
+      public void testCutAndPasteInTheSamePlace() throws InterruptedException{
+         // given slide 0 and slide 1 and slide 2
+         slideDeck.insertElementAt(slide2, 2);
+         
+         // when cut slide 1 
+         fListView.clickItem(1);
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_X);
+         fListView.releaseKey(KeyEvent.VK_META);
+         
+         // slide 2 should be selected
+         assertThat(editor.editView.getSlide(), sameInstance(slide2));
+         
+         // when paste
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_V);
+         fListView.releaseKey(KeyEvent.VK_META);
+
+         // a copy of slide 1 should be selected
+         assertThat(editor.editView.getSlide().getName(), equalTo(slide1.getName()));
          
 
       }
+      
+      
+      
+      @Test
+      public void testCutAndPasteTwoSlidesAndBothSlidesShouldBeSelected() throws InterruptedException{
+         // given slide 0 and slide 1 and slide 2
+         slideDeck.insertElementAt(slide2, 2);
+         
+         // when cut slide 0 and 1
+         fListView.clickItem(0);
+         fListView.pressKey(KeyEvent.VK_SHIFT);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_DOWN);
+         fListView.releaseKey(KeyEvent.VK_SHIFT);
+         
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_X);
+         fListView.releaseKey(KeyEvent.VK_META);
+         
+         // slide 2 should be selected
+         assertThat(editor.editView.getSlide(), sameInstance(slide2));
+         
+         // when paste
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_V);
+         fListView.releaseKey(KeyEvent.VK_META);
+         
+         fListView.requireItemCount(3);
 
+         // two slides should be selected
+         fListView.requireSelectedItems(1,2);
+         
+      }
+      
+      @Test
+      public void testCutAndPasteTwoSlidesTwice() throws InterruptedException{
+         // given slide 0 and slide 1 and slide 2
+         slideDeck.insertElementAt(slide2, 2);
+         
+         // when cut slide 0 and 1
+         fListView.clickItem(0);
+         fListView.pressKey(KeyEvent.VK_SHIFT);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_DOWN);
+         fListView.releaseKey(KeyEvent.VK_SHIFT);
+         
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_X);
+         fListView.releaseKey(KeyEvent.VK_META);
+         
+         // slide 2 should be selected
+         assertThat(editor.editView.getSlide().getName(), equalTo(slide2.getName()));
+         
+         // when paste 
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_V);
+         fListView.releaseKey(KeyEvent.VK_META);
+         
+         fListView.requireItemCount(3);
 
+         // when paste again
+         fListView.pressKey(KeyEvent.VK_META);
+         fListView.pressAndReleaseKeys(KeyEvent.VK_V);
+         fListView.releaseKey(KeyEvent.VK_META);
+         
+         fListView.requireItemCount(5);
+
+         assertThat(editor.editView.getSlide().getName(), equalTo(slide0.getName()));
+         
+         // 2 0 1 0 1
+//          last two slides should be slide 0 and slide 1
+         assertThat(((Slide)slideDeck.getElementAt(4)).getName(), equalTo(slide1.getName()));
+         assertThat(((Slide)slideDeck.getElementAt(3)).getName(), equalTo(slide0.getName()));
+         
+      }
+   }
+   
+   
+   
+   public static class UserSelectionTest1 extends WithConcreteFixtures {
 
       
       @Test
@@ -349,28 +468,6 @@ public class SlideDeckEditorTest {
       }
 
 
-      @Test
-      public void testClickToSelectAndDeleteSlide(){
-         int n = slideDeck.getSlides().size();
-
-         fListView.clickItem(0);
-         fListView.pressAndReleaseKeys(KeyEvent.VK_DELETE);
-
-         fListView.requireItemCount(n-1);
-         assertThat(editor.getSlideDeck().getSize(), equalTo(n-1));
-      }
-
-      @Test
-      public void testClickToSelectAndDeleteSlideUntilEmpty(){
-         fListView.clickItem(0);
-         fListView.pressAndReleaseKeys(KeyEvent.VK_DELETE);
-         fListView.clickItem(0);
-         fListView.pressAndReleaseKeys(KeyEvent.VK_DELETE);
-
-         fListView.requireItemCount(0);
-
-         assertThat(editor.editView.getSlide(), nullValue());
-      }
 
       @Test
       public void testEditTheContentOfSlide() throws InterruptedException{
@@ -437,18 +534,25 @@ public class SlideDeckEditorTest {
          (new JListFixture(window.robot,editor.listView)).selectItem(1);
          assertThat(editor.editView.getSlide(), sameInstance(slide1));
          
-               Object lock = new Object();
-      synchronized(lock){
-         lock.wait();
-      }
+        }
+      
+      
+      @Test
+      public void testDeleteTwoSelectedSlides(){
+         int n = slideDeck.getSize();
+         
+         fListView.selectItems(0,1);
 
-
+         editor.getEditActionFactory().deleteSelectedSlideAction().actionPerformed(mockedActionEvent);         
+         fListView.requireItemCount(n-2);
       }
 
 
       @Test
-      public void testDeleteSelectedSlideAction() {
+      public void testDeleteSelectedSlideActionAndUndo() {
          int n = slideDeck.getSize();
+         
+         fListView.selectItem(0);
 
          editor.getEditActionFactory().deleteSelectedSlideAction().actionPerformed(mockedActionEvent);         
          fListView.requireItemCount(n-1);
@@ -460,6 +564,8 @@ public class SlideDeckEditorTest {
       @Test
       public void testDeleteSelectedSlideAndUndoTwice() {
          int n = slideDeck.getSize();
+         
+         fListView.selectItem(0);
 
          editor.getEditActionFactory().deleteSelectedSlideAction().actionPerformed(mockedActionEvent);         
          fListView.requireItemCount(n-1);

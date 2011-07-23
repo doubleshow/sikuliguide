@@ -7,30 +7,18 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import javax.swing.DefaultListModel;
 import javax.swing.DropMode;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JList;
-import javax.swing.ListModel;
 import javax.swing.TransferHandler;
-import javax.swing.TransferHandler.TransferSupport;
 
-import org.fest.swing.edt.GuiActionRunner;
-import org.fest.swing.edt.GuiQuery;
-import org.fest.swing.fixture.FrameFixture;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.sikuli.ui.ArrayListTransferHandler.ArrayListTransferable;
-
-public class DList extends JList {
+public class DList<T> extends JList {
 
 
    DList(){
       setDragEnabled(true);
       setDropMode(DropMode.INSERT);
-      setTransferHandler(new ArrayListTransferHandler());
+      setTransferHandler(new ArrayListTransferHandler<T>());
    }
 
 }
@@ -53,6 +41,8 @@ class ArrayListTransferHandler<T> extends TransferHandler {
    int addIndex = -1; //Location where items were added
 
    int addCount = 0; //Number of items added
+   
+   boolean isDragDrop = false;
 
    public ArrayListTransferHandler() {
       try {
@@ -80,8 +70,10 @@ class ArrayListTransferHandler<T> extends TransferHandler {
       try {
          target = (JList) c;
          if (hasLocalArrayListFlavor(t.getTransferDataFlavors())) {
+            System.out.println("localArrayList");
             alist = (ArrayList<T>) t.getTransferData(localArrayListFlavor);
          } else if (hasSerialArrayListFlavor(t.getTransferDataFlavors())) {
+            System.out.println("serialArrayListFlavor");
             alist = (ArrayList<T>) t.getTransferData(serialArrayListFlavor);
          } else {
             return false;
@@ -98,11 +90,52 @@ class ArrayListTransferHandler<T> extends TransferHandler {
       //locally or serially.
 
       //We'll drop at the current selected index.
-      int index = target.getSelectedIndex();
+      int index = target.getLeadSelectionIndex();
+      //int index = target.getSelectionIndex();
 
-      if (support.isDrop())
+      if (support.isDrop()){
          // or the drop location
          index = ((JList.DropLocation) support.getDropLocation()).getIndex()-1;
+         
+         System.out.println("drop index: " + index);
+         
+         isDragDrop = true;  
+         
+         if (source.equals(target)) {
+            if (indices != null && index >= indices[0] - 1
+                  && index <= indices[indices.length - 1]) {
+               indices = null;
+               return true;
+            }
+         }
+         
+         MutableListModel<T> model = (MutableListModel<T>) source.getModel();
+         for (int i = indices.length - 1; i >= 0; i--){
+            // System.out.println("removing element at: " + indices[i]);
+             model.removeElementAt(indices[i]);
+          }
+
+         
+         MutableListModel<T> listModel = (MutableListModel<T>) target.getModel();
+
+         int max = listModel.getSize();
+         if (index < 0) {
+            index = 0;  // insert to the front
+         } else {
+            index++;
+            if (index > max) {
+               index = max;
+            }
+         }
+         addIndex = index;
+         addCount = alist.size();
+         listModel.insertElementsAt(alist, index);
+         return true;
+         
+         //listModel.
+      }else{
+         isDragDrop = false;
+      }
 
       //Prevent the user from dropping data back on itself.
       //For example, if the user is moving items #4,#5,#6 and #7 and
@@ -117,11 +150,8 @@ class ArrayListTransferHandler<T> extends TransferHandler {
             return true;
          }
       }
-
-      //DefaultListModel listModel = (DefaultListModel) target.getModel();
-
+      
       MutableListModel<T> listModel = (MutableListModel<T>) target.getModel();
-
 
       int max = listModel.getSize();
       if (index < 0) {
@@ -134,10 +164,7 @@ class ArrayListTransferHandler<T> extends TransferHandler {
       }
       addIndex = index;
       addCount = alist.size();
-      for (int i = 0; i < alist.size(); i++) {
-         System.out.println("adding to: " + index);
-         listModel.insertElementAt(alist.get(i), index++);
-      }
+      listModel.insertElementsAt(alist, index);
       return true;
    }
 
@@ -149,9 +176,12 @@ class ArrayListTransferHandler<T> extends TransferHandler {
    }
 
    protected void exportDone(JComponent c, Transferable data, int action) {
-      System.out.println("exportDone");
-
-      if ((action == MOVE) && (indices != null)) {
+      //System.out.println("exportDone");
+      // For Drop this is called after importData
+      // For Cut this is called before importData
+      
+      System.out.println("action: " + action);
+      if ((action == MOVE) && (indices != null) && (!isDragDrop)) {
 
          MutableListModel<T> model = (MutableListModel<T>) source.getModel();
          //       
@@ -168,9 +198,9 @@ class ArrayListTransferHandler<T> extends TransferHandler {
          //
          //
          //       //addCount = alist.size();
-         System.out.println("Original:");
+         //System.out.println("Original:");
          for (int i = 0; i < indices.length; i++) {
-            System.out.println(indices[i]);
+           // System.out.println(indices[i]);
          }
 
 
@@ -187,15 +217,15 @@ class ArrayListTransferHandler<T> extends TransferHandler {
             }
          }
          
-         System.out.println("After:");
+         //System.out.println("After:");
          for (int i = 0; i < indices.length; i++) {
-            System.out.println(indices[i]);
+            //System.out.println(indices[i]);
          }
 
 
-         System.out.println("addcount: "+addCount);
+         //System.out.println("addcount: "+addCount);
          for (int i = indices.length - 1; i >= 0; i--){
-            System.out.println("removing element at: " + indices[i]);
+           // System.out.println("removing element at: " + indices[i]);
             model.removeElementAt(indices[i]);
          }
 
@@ -253,10 +283,7 @@ class ArrayListTransferHandler<T> extends TransferHandler {
          for (int i = 0; i < values.length; i++) {
             Object o = values[i];
             T t = (T) o;
-            String str = o.toString();
-            if (str == null)
-               str = "";
-            //alist.add(str);
+            //Object o1 = t.clone();
             alist.add(t);
          }
          return new ArrayListTransferable<T>(alist);
@@ -284,7 +311,7 @@ class ArrayListTransferHandler<T> extends TransferHandler {
       }
 
       public DataFlavor[] getTransferDataFlavors() {
-         return new DataFlavor[] { localArrayListFlavor,
+         return new DataFlavor[] { //localArrayListFlavor,
                serialArrayListFlavor };
       }
 

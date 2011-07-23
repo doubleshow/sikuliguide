@@ -1,5 +1,8 @@
 package org.sikuli.ui;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import javax.swing.event.ChangeEvent;
@@ -18,6 +21,14 @@ public class DefaultSlide implements Slide, Serializable{
    
    protected DefaultSlide(){
       
+   }
+   
+   private void readObject(ObjectInputStream ois) 
+   throws IOException,ClassNotFoundException {
+      ois.defaultReadObject();
+      System.out.println("readObject");
+      undoableEditSupport = new UndoableEditSupport(this);
+      listenerList = new EventListenerList(); 
    }
    
    private String name = "";

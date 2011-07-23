@@ -91,8 +91,8 @@ public class StoryEditorTestCase {
 
          SlideDeckListView listView = new SlideDeckListView();
          listView.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-         listView.setCellRenderer(new TestStepCellRenderer());
-//         listView.setCellRenderer(new MyCellRenderer());
+         //listView.setCellRenderer(new TestStepCellRenderer());
+         listView.setCellRenderer(new MyCellRenderer());
          editor.setSlideDeckListView(listView);
 
          

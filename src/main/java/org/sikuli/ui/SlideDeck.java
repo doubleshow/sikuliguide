@@ -10,6 +10,7 @@ interface MutableListModel<T> extends ListModel {
    public boolean removeElement(T elem);
    public void removeElementAt(int index);
    public void insertElementAt(T elem, int index);
+   public void insertElementsAt(List<T> elem, int index);
 }
 
 public interface SlideDeck extends MutableListModel<Slide> {

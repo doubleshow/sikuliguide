@@ -3,7 +3,6 @@ package org.sikuli.ui;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.AbstractListModel;
 import javax.swing.DefaultListModel;
 import javax.swing.ListModel;
 import javax.swing.event.ChangeEvent;
@@ -16,56 +15,8 @@ import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoableEditSupport;
 
-class DefaultMutableListModel<T> extends AbstractListModel 
-   implements MutableListModel<T>{
-   
-   List<T> elements = new ArrayList<T>();
-
-   @Override
-   public T getElementAt(int index) {
-      return elements.get(index);
-   }
-
-   @Override
-   public int getSize() {
-      return elements.size();
-   }
-
-   @Override
-   public boolean removeElement(T elem) {
-      int index = elements.indexOf(elem);
-      boolean ret = elements.remove(elem);
-      fireIntervalRemoved(this,index,index);
-      return ret;
-   }
-   
-   @Override
-   public void removeElementAt(int index) {
-      elements.remove(index);
-      fireIntervalRemoved(this,index,index);
-   }
-
-   @Override
-   public void insertElementAt(T elem, int index) {
-      elements.add(index,elem);
-      fireIntervalAdded(this,index,index);
-   }
-
-   public int indexOf(T elem) {
-      return elements.indexOf(elem);
-   }
-
-   
-   
-}
-
 public class DefaultSlideDeck extends DefaultMutableListModel<Slide> 
    implements SlideDeck {
-
-   //List<Slide> slides = new ArrayList<Slide>();
-
-   //DefaultListModel listModel = new DefaultListModel();
-
 
    @Override
    public List<Slide> getSlides() {
@@ -247,6 +198,18 @@ public class DefaultSlideDeck extends DefaultMutableListModel<Slide>
       fireStateChanged();
    }
 
+   @Override
+   public void removeElementAt(final int index) {
+      final Slide slideDeleted = (Slide) getElementAt(index);
+      super.removeElementAt(index);
+      undoableEditSupport.postEdit(new AbstractUndoableEdit(){
+         public void undo() throws CannotUndoException {
+            super.undo();
+            DefaultSlideDeck.super.insertElementAt(slideDeleted, index);
+         }
+      });      
+      fireStateChanged();
+   }
 
 
 

@@ -6,6 +6,8 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 import org.simpleframework.xml.Attribute;
@@ -76,7 +78,14 @@ class DefaultSprite implements Sprite, Serializable {
       return o;
    }
    
-   transient protected final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+   private void readObject(ObjectInputStream ois) 
+   throws IOException,ClassNotFoundException {
+      ois.defaultReadObject();
+      System.out.println("readObject");
+      pcs = new PropertyChangeSupport(this);
+   }
+   
+   transient protected PropertyChangeSupport pcs = new PropertyChangeSupport(this);
    
    public void addPropertyChangeListener( PropertyChangeListener listener ){
       this.pcs.addPropertyChangeListener( listener );

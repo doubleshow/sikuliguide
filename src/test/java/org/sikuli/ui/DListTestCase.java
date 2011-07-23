@@ -32,85 +32,103 @@ import org.fest.swing.fixture.JPanelFixture;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+//
+//class TestTranserHandler extends TransferHandler {
+//   
+//   @Override
+//   protected void exportDone(JComponent source, Transferable data, int action) {
+//
+//      
+//      
+//      super.exportDone(source, data, action);
+//   }
+//
+//   public int getSourceActions(JComponent c){ 
+//      return LINK; 
+//   } 
+//   
+//   public boolean canImport(TransferSupport info) {
+//      
+//      System.out.println("canImport called");
+//      // for demo purposes, we'll only support drops and not clipboard paste
+//      if (!info.isDrop()) {
+//          return false;
+//      }
+//      
+//      // we only support importing Strings
+//      if (!info.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+//          return false;
+//      }
+//
+//      // fetch the drop location (it's a JTree.DropLocation for JTree)
+//      JList.DropLocation dl = (JList.DropLocation)info.getDropLocation();
+//      System.out.println("dropped location:" + dl.getIndex());
+//
+//      //info.setDropAction(LINK);
+//      
+//      // we only support drops for valid paths in the tree
+//      return true;//dl.getIndex() >= 0;
+//  }
+//   
+//   @Override
+//   public boolean importData(TransferSupport info) {
+//      System.out.println("Got something dropped.");
+//      try {
+//         String s = (String) info.getTransferable().getTransferData(DataFlavor.stringFlavor);
+//
+//         JList list = (JList) info.getComponent();
+//         int index = ((JList.DropLocation) info.getDropLocation()).getIndex();
+//         
+//         DefaultListModel listModel = (DefaultListModel) list.getModel();
+//         listModel.add(index, s);
+//         
+//         // if source element is equal to dest element
+//         //then it is a move action
+//      
+//      } catch (UnsupportedFlavorException ignored) {
+//      } catch (IOException e) {
+//      }
+//      
+//      
+//      return true;
+//   }
+//   
+//   public Transferable createTransferable(JComponent comp) {
+//      System.out.println("Transferable to be created");
+//      JList list = (JList) comp;
+//      String str = (String) list.getSelectedValue();
+//      return new  StringSelection(str);
+//   }
+//   
+//}
 
-class TestTranserHandler extends TransferHandler {
-   
-   @Override
-   protected void exportDone(JComponent source, Transferable data, int action) {
 
-      
-      
-      super.exportDone(source, data, action);
-   }
-
-   public int getSourceActions(JComponent c){ 
-      return LINK; 
-   } 
-   
-   public boolean canImport(TransferSupport info) {
-      
-      System.out.println("canImport called");
-      // for demo purposes, we'll only support drops and not clipboard paste
-      if (!info.isDrop()) {
-          return false;
-      }
-      
-      // we only support importing Strings
-      if (!info.isDataFlavorSupported(DataFlavor.stringFlavor)) {
-          return false;
-      }
-
-      // fetch the drop location (it's a JTree.DropLocation for JTree)
-      JList.DropLocation dl = (JList.DropLocation)info.getDropLocation();
-      System.out.println("dropped location:" + dl.getIndex());
-
-      //info.setDropAction(LINK);
-      
-      // we only support drops for valid paths in the tree
-      return true;//dl.getIndex() >= 0;
-  }
-   
-   @Override
-   public boolean importData(TransferSupport info) {
-      System.out.println("Got something dropped.");
-      try {
-         String s = (String) info.getTransferable().getTransferData(DataFlavor.stringFlavor);
-
-         JList list = (JList) info.getComponent();
-         int index = ((JList.DropLocation) info.getDropLocation()).getIndex();
-         
-         DefaultListModel listModel = (DefaultListModel) list.getModel();
-         listModel.add(index, s);
-         
-         // if source element is equal to dest element
-         //then it is a move action
-      
-      } catch (UnsupportedFlavorException ignored) {
-      } catch (IOException e) {
-      }
-      
-      
-      return true;
-   }
-   
-   public Transferable createTransferable(JComponent comp) {
-      System.out.println("Transferable to be created");
-      JList list = (JList) comp;
-      String str = (String) list.getSelectedValue();
-      return new  StringSelection(str);
-   }
-   
-}
-
-
-class Person implements Serializable{
+class Person implements Serializable {
    
    String name;
    int id;
+   
+   DataFlavor serialFlavor = new DataFlavor(Person.class, DataFlavor.javaSerializedObjectMimeType);
   
    public String toString(){
       return String.format("[%d] %s: %s", id, name, hashCode());
    }
+
+//   @Override
+//   public Object getTransferData(DataFlavor flavor)
+//         throws UnsupportedFlavorException, IOException {
+//      return this;
+//   }
+//
+//   @Override
+//   public DataFlavor[] getTransferDataFlavors() {
+//      return new DataFlavor[]{};
+//   }
+//
+//   @Override
+//   public boolean isDataFlavorSupported(DataFlavor flavor) {
+//      return flavor.equals(serialFlavor);
+//   }
    
 }
 
@@ -158,7 +176,7 @@ class PersonCellRenderer extends JLabel implements ListCellRenderer{
 public class DListTestCase {
 
    private DefaultMutableListModel<Person> listModel;
-   private DList dList;
+   private DList<Person> dList;
 
    protected FrameFixture window;
    private JFrame frame;
