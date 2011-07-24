@@ -34,12 +34,9 @@ public class TextPropertyEditor extends JPanel implements KeyListener {
        
        setName("TextPropertyEditor");
        
-       _textField = new JTextField(20);
-       
+       _textField = new JTextField(20);       
        _textField.setSize(_textField.getPreferredSize());
-
        setSize(_textField.getPreferredSize());       
-       //setActualSize(_textField.getPreferredSize());
        
        add(_textField);
        
@@ -48,7 +45,7 @@ public class TextPropertyEditor extends JPanel implements KeyListener {
        
        _textField.addKeyListener(this);
        setFocusable(true);
-       setOpaque(true);
+       setOpaque(false);
        
        
        addFocusListener(new FocusListener(){
@@ -59,13 +56,10 @@ public class TextPropertyEditor extends JPanel implements KeyListener {
 
          @Override
          public void focusLost(FocusEvent arg0) {
-            saveText();
             setVisible(false);            
          }
           
-       });
-       
-    //   setBounds(new Rectangle(0,0,100,100));
+       });       
    }
 
    @Override
@@ -74,24 +68,12 @@ public class TextPropertyEditor extends JPanel implements KeyListener {
 
       
       if (k.getKeyCode() == KeyEvent.VK_ENTER){ 
-         
-//         Debug.info("[TextPropertyEditor] User pressed ENTER");
-         
          saveText();
-         
-//         if (getTargetComponent() instanceof SikuliGuideText)
-//            ((SikuliGuideText) getTargetComponent()).setText(textField.getText());
-//         else if (getTargetComponent() instanceof SikuliGuideFlag)
-//            ((SikuliGuideFlag) getTargetComponent()).setText(textField.getText());
-         
          setVisible(false);     
                   
-      }else if (k.getKeyCode() == KeyEvent.VK_ESCAPE){
-         
-         System.out.println("[TextPropertyEditor] User pressed ESCAPE");
-         
-         setVisible(false);
-         
+      }else if (k.getKeyCode() == KeyEvent.VK_ESCAPE){         
+         //System.out.println("[TextPropertyEditor] User pressed ESCAPE");         
+         setVisible(false);         
       }
    }
    
@@ -113,28 +95,12 @@ public class TextPropertyEditor extends JPanel implements KeyListener {
    public void setTextSprite(Text textModel) {
       _text = textModel;      
       _textField.setText(_text.getText());
-
       _textField.setSize(_textField.getPreferredSize());
-      setSize(_textField.getPreferredSize());
       
-//      Debug.info("" +this);
-//      if (targetComponent instanceof SikuliGuideText){
-//         setLocationRelativeToComponent(targetComponent, 
-//               Layout.TOP);
-//         
-//         String text = ((SikuliGuideText) targetComponent).getText();
-//         textField.setText(text);
-//      }
-//      else if (targetComponent instanceof SikuliGuideFlag){
-//         setLocationRelativeToComponent(targetComponent, 
-//               Layout.TOP);
-//         
-//         String text = ((SikuliGuideFlag) targetComponent).getText();
-//         textField.setText(text);         
-//      }
-//
-      
-
+      Dimension size = _textField.getSize();
+      size.width += 10;
+      size.height += 10;
+      setSize(size);
    }
 
    public Text getTextSprite() {
@@ -142,8 +108,13 @@ public class TextPropertyEditor extends JPanel implements KeyListener {
    }
 
    public void saveText() {
+      String text = _textField.getText();
+      if (text.isEmpty()){
+         text = "";
+      }
+      
       if (_text != null){
-         _text.setText(_textField.getText());
+         _text.setText(text);
       }
    }
       

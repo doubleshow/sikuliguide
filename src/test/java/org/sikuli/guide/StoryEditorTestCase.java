@@ -16,6 +16,8 @@ import javax.swing.JPanel;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 
+import net.miginfocom.swing.MigLayout;
+
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiQuery;
 import org.fest.swing.fixture.FrameFixture;
@@ -56,7 +58,7 @@ public class StoryEditorTestCase {
       public void setUp(){
 
          editor = new StoryEditor();
-         editor.setPreferredSize(new Dimension(640,480));
+         editor.setPreferredSize(new Dimension(1000,640));
          JFrame frame = GuiActionRunner.execute(new GuiQuery<JFrame>() {
             protected JFrame executeInEDT() {
                return new JFrame();  
@@ -89,10 +91,10 @@ public class StoryEditorTestCase {
          
          editor.setSlideEditView(new StepEditView());
 
-         SlideDeckListView listView = new SlideDeckListView();
-         listView.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+         StoryListView listView = new StoryListView();
+         //listView.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
          //listView.setCellRenderer(new TestStepCellRenderer());
-         listView.setCellRenderer(new MyCellRenderer());
+         //listView.setCellRenderer(new MyCellRenderer());
          editor.setSlideDeckListView(listView);
 
          
@@ -191,48 +193,3 @@ class TestStepCellRenderer extends JLabel implements ListCellRenderer{
    }   
 }
 
-class MyCellRenderer extends JPanel implements ListCellRenderer {
-   // final static ImageIcon longIcon = new ImageIcon("long.gif");
-   // final static ImageIcon shortIcon = new ImageIcon("short.gif");
-
-   // This is the only method defined by ListCellRenderer.
-   // We just reconfigure the JLabel each time we're called.
-
-   StepThumbView _stepView = new StepThumbView();
-
-   MyCellRenderer(){         
-      setLayout(new GridBagLayout());
-      setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-
-      _stepView.setPreferredSize(new Dimension(100,100));
-
-      GridBagConstraints c = new GridBagConstraints();
-      c.anchor = GridBagConstraints.CENTER;
-      add(_stepView,c);
-      validate();
-   }
-
-   public Component getListCellRendererComponent(
-         JList list,              // the list
-         Object value,            // value to display
-         int index,               // cell index
-         boolean isSelected,      // is the cell selected
-         boolean cellHasFocus)    // does the cell have focus
-   {
-
-      Step step = (Step) value;
-      _stepView.setStep(step);
-      _stepView.setPreferredSize(new Dimension(100,100));
-      setPreferredSize(new Dimension(120,120));
-      
-      if (isSelected){
-         setBorder(BorderFactory.createLineBorder(Color.red, 5));
-      }else{
-         setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-      }
-
-      return this;
-   }
-
-
-}

@@ -55,12 +55,28 @@ class FixtureFactory {
    
    static ContextImage createContextImage(){
       try {
-         return new ContextImage(new File(ROOT, "screen.png"));
+         ContextImage img = new DefaultContextImage(new File(ROOT, "screen.png"));
+         img.setX(50);
+         img.setY(60);
+         return img;
       } catch (IOException e) {
          e.printStackTrace();
       }
       return null;
    }
+   
+   static ContextImage createContextImage1(){
+      try {
+         ContextImage img = new DefaultContextImage(new File(ROOT, "screen1.png"));
+         img.setX(40);
+         img.setY(20);
+         return img;
+      } catch (IOException e) {
+         e.printStackTrace();
+      }
+      return null;
+   }
+
    
    final static String ROOT = "src/test/resources";
    
@@ -74,15 +90,7 @@ class FixtureFactory {
       step.addSprite(circle);
       step.addSprite(flag);
       step.addSprite(target);
-      
-      
-      try {
-         ContextImage contextImage = new ContextImage(new File(ROOT, "screen.png"));
-         step.setContextImage(contextImage);
-      } catch (IOException e) {
-         e.printStackTrace();
-      }
-      
+      step.setContextImage(createContextImage1());
       return step;
    }
    
@@ -98,14 +106,8 @@ class FixtureFactory {
       step.addSprite(circle);
       step.addSprite(flag);
       step.addSprite(target);
-      
-      
-      try {
-         ContextImage contextImage = new ContextImage(new File(ROOT, "screen.png"));
-         step.setContextImage(contextImage);
-      } catch (IOException e) {
-         e.printStackTrace();
-      }
+            
+      step.setContextImage(createContextImage());
       
       return step;
    }
@@ -294,11 +296,11 @@ public class ViewTestCase {
             txt.setX(txt.getX() + 10);
             txt.setText("counter " + (counter++));
             
-            if (toggle)
-               txt.setForeground(Color.green);
-            else
-               txt.setForeground(Color.red);
-            
+//            if (toggle)
+//               txt.setForeground(Color.green);
+//            else
+//               txt.setForeground(Color.red);
+//            
             toggle = !toggle;
          }
          
@@ -323,7 +325,7 @@ public class ViewTestCase {
       f.setVisible(true);
       
       
-      final Sprite s = new DefaultSprite(10,10,100,200);
+      final StyledSprite s = new DefaultSprite(10,10,100,200);
       SpriteView sv = new SpriteView(s);
       
       StepView v = new StepView(null);
@@ -369,11 +371,11 @@ public class ViewTestCase {
             txt.setX(txt.getX() + 10);
             txt.setText("counter " + (counter++));
             
-            if (toggle)
-               s.setForeground(Color.green);
-            else
-               s.setForeground(Color.red);
-            
+//            if (toggle)
+//               s.setForeground(Color.green);
+//            else
+//               s.setForeground(Color.red);
+//            
             toggle = !toggle;
          }
          

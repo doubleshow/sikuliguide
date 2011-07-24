@@ -27,6 +27,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.TransferHandler;
 import javax.swing.event.ChangeEvent;
@@ -42,6 +43,8 @@ import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEdit;
 import javax.swing.undo.UndoableEditSupport;
 
+import net.miginfocom.swing.MigLayout;
+
 import org.sikuli.guide.Step;
 
 import quicktime.std.comp.Component;
@@ -51,18 +54,45 @@ public class SlideDeckEditor extends JPanel {
 
    JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
+   LeftPanel leftPanel = new LeftPanel();
+   RightPanel rightPanel = new RightPanel();
+   
    SlideEditView editView = new SlideEditView();
    SlideDeckListView listView = new SlideDeckListView();
 
    JPanel blankView;
+   
+   
+   class LeftPanel extends JScrollPane{
+      
+      LeftPanel(){
+         setMinimumSize(new Dimension(200,10));
+      }      
+   }
+   
+   class RightPanel extends JPanel{
+      
+      JScrollPane scrollPane = new JScrollPane();
+      RightPanel(){
+         setLayout(new MigLayout("insets 0"));
+         //add(scrollPane);
+      }
+      
+      void setComponent(JComponent comp){
+         removeAll();
+         add(comp);//scrollPane.setViewportView(comp);
+      }
+      
+   }
 
    protected SlideDeckEditor(){
       setLayout(new BorderLayout());      
-      setSlideDeckListView(listView);
-
-      splitPane.setLeftComponent(listView);
-      splitPane.setRightComponent(editView);
+      splitPane.setLeftComponent(leftPanel);
+      splitPane.setRightComponent(rightPanel);
       add(splitPane, BorderLayout.CENTER);
+      
+      setSlideDeckListView(listView);
+      setSlideEditView(editView);
    }
 
 //   protected void removeSelectedSlide() {
@@ -227,8 +257,8 @@ public class SlideDeckEditor extends JPanel {
    
 
    public void refresh() {   
-      if (getSlideDeck()==null)
-         return;
+//      if (getSlideDeck()==null)
+//         return;
       
 //      for (Slide slide : slideDeck.getSlides()){
 //         slide.removeChangeListener(slideListener);
@@ -258,7 +288,7 @@ public class SlideDeckEditor extends JPanel {
    public void setSlideEditView(SlideEditView view){
       editView = view;
       editView.setSlide(getSelectedSlide());
-      splitPane.setRightComponent(editView);      
+      rightPanel.setComponent(editView);      
       refresh();
    }
 
@@ -353,32 +383,36 @@ public class SlideDeckEditor extends JPanel {
                getEditActionFactory().deleteSelectedSlideAction().actionPerformed(new ActionEvent(this,0,null));
             }
             
-            if (e.getKeyCode() == KeyEvent.VK_2){
-               System.out.println("key pressed");
-               validate();
-               System.out.println(listView.getBounds());
-               System.out.println(listView.getVisibleRect());
-               System.out.println(listView.getCellBounds(0,3));
-               //listView.ensureIndexIsVisible(0);
-               System.out.println(listView.getFirstVisibleIndex());
-               System.out.println(listView.getLastVisibleIndex());
-               System.out.println(listView.getVisibleRowCount());
-               System.out.println(listView.getFixedCellHeight());
-               System.out.println(listView.getModel().getSize());
-               
-               Step step = (Step) listView.getModel().getElementAt(0);
-               System.out.println("step:"+ step.getSprites().size());
-               
-
-               listView.repaint();
-               listView.paintImmediately(0,0,150,467);
-               listView.setSelectedIndex(2);
-            }
+//            if (e.getKeyCode() == KeyEvent.VK_2){
+//               System.out.println("key pressed");
+//               validate();
+//               System.out.println(listView.getBounds());
+//               System.out.println(listView.getVisibleRect());
+//               System.out.println(listView.getCellBounds(0,3));
+//               //listView.ensureIndexIsVisible(0);
+//               System.out.println(listView.getFirstVisibleIndex());
+//               System.out.println(listView.getLastVisibleIndex());
+//               System.out.println(listView.getVisibleRowCount());
+//               System.out.println(listView.getFixedCellHeight());
+//               System.out.println(listView.getModel().getSize());
+//               
+//               Step step = (Step) listView.getModel().getElementAt(0);
+//               System.out.println("step:"+ step.getSprites().size());
+//               
+//
+//               listView.repaint();
+//               listView.paintImmediately(0,0,150,467);
+//               listView.setSelectedIndex(2);
+//            }
          }
 
       });      
       
-      splitPane.setLeftComponent(listView);      
+      
+      leftPanel.setViewportView(listView);
+      //leftPanel.set
+      leftPanel.repaint();
+      //splitPane.setLeftComponent(listView);      
       refresh();
       listView.setSelectedIndex(0);
    }

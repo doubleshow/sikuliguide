@@ -7,217 +7,362 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.util.ArrayList;
 
+import javax.swing.Action;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
 import javax.swing.JComponent;
+import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.TransferHandler;
+import javax.swing.TransferHandler.TransferSupport;
+
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InvalidClassException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
+import java.io.OutputStream;
+import java.util.LinkedList;
+import java.util.Queue;
+
+class SerialClone {
+    public static <T> T clone(T x) {
+   try {
+       return cloneX(x);
+   } catch (IOException e) {
+       throw new IllegalArgumentException(e);
+   } catch (ClassNotFoundException e) {
+       throw new IllegalArgumentException(e);
+   }
+    }
+
+    private static <T> T cloneX(T x) throws IOException, ClassNotFoundException {
+   ByteArrayOutputStream bout = new ByteArrayOutputStream();
+   CloneOutput cout = new CloneOutput(bout);
+   cout.writeObject(x);
+   byte[] bytes = bout.toByteArray();
+   
+   ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
+   CloneInput cin = new CloneInput(bin, cout);
+
+   @SuppressWarnings("unchecked")  // thanks to Bas de Bakker for the tip!
+   T clone = (T) cin.readObject();
+   return clone;
+    }
+
+    private static class CloneOutput extends ObjectOutputStream {
+   Queue<Class<?>> classQueue = new LinkedList<Class<?>>();
+
+   CloneOutput(OutputStream out) throws IOException {
+       super(out);
+   }
+
+   @Override
+   protected void annotateClass(Class<?> c) {
+       classQueue.add(c);
+   }
+
+   @Override
+   protected void annotateProxyClass(Class<?> c) {
+       classQueue.add(c);
+   }
+    }
+
+    private static class CloneInput extends ObjectInputStream {
+   private final CloneOutput output;
+
+   CloneInput(InputStream in, CloneOutput output) throws IOException {
+       super(in);
+       this.output = output;
+   }
+
+      @Override
+   protected Class<?> resolveClass(ObjectStreamClass osc)
+   throws IOException, ClassNotFoundException {
+       Class<?> c = output.classQueue.poll();
+       String expected = osc.getName();
+       String found = (c == null) ? null : c.getName();
+       if (!expected.equals(found)) {
+      throw new InvalidClassException("Classes desynchronized: " +
+         "found " + found + " when expecting " + expected);
+       }
+       return c;
+   }
+
+      @Override
+      protected Class<?> resolveProxyClass(String[] interfaceNames)
+   throws IOException, ClassNotFoundException {
+          return output.classQueue.poll();
+      }
+    }
+}
+class SpriteTransferHandler extends TransferHandler{
+      
+   DataFlavor serialSpriteFlavor = new DataFlavor(Sprite.class, "Sprite");
+   
+   //Sprite spriteBeingTransferred;
+   static Point insertLocation = new Point();
+   static boolean alreadyCut = true;
+   
+   protected Transferable createTransferable(JComponent c) {
+      System.out.println("SpriteTransfer: createTransferable");
+      if (c instanceof SpriteView) {
+         SpriteView source = (SpriteView) c;
+         Sprite copy = SerialClone.clone(source.getSprite());  
+         insertLocation.setLocation(copy.getX(), copy.getY());
+         alreadyCut = false;
+         return new SpriteTransferable(copy);
+      }
+      return null;
+   }
+   
+   private boolean hasLocalArrayListFlavor(DataFlavor[] flavors) {
+      if (serialSpriteFlavor == null) {
+         return false;
+      }
+
+      for (int i = 0; i < flavors.length; i++) {
+         if (flavors[i].equals(serialSpriteFlavor)) {
+            return true;
+         }
+      }
+      return false;
+   }
+
+   
+   @Override
+   public boolean canImport(TransferSupport support){
+      System.out.println("SpriteTransfer: canImport");      
+      DataFlavor[] flavors = support.getDataFlavors();
+      if (hasLocalArrayListFlavor(flavors)) {
+         return true;
+      }
+      return false;
+   }
+   
+   @Override
+   public boolean importData(TransferSupport support){
+      System.out.println("SpriteTransfer: importData");      
+      JComponent source = (JComponent) support.getComponent();
+      Transferable transferable = support.getTransferable();
+      System.out.println("Transferable: " + transferable);
+      if (!canImport(support)){
+         return false;
+      }
+      
+      if (source instanceof SpriteView){
+         SpriteView spriteView = (SpriteView) source; 
+         try {
+            Sprite sprite = null;
+            if (hasLocalArrayListFlavor(support.getDataFlavors())){
+               sprite = (Sprite) transferable.getTransferData(serialSpriteFlavor);
+            }else{
+               return false;
+            }
+            
+            StepEditView stepView = (StepEditView) SwingUtilities.getAncestorOfClass(StepEditView.class, spriteView);
+            if (stepView == null)
+               return false;            
+            Step step = stepView.getStep();
+            
+            // TODO: how come object is not serialized but still the same instance
+            insertLocation.x += 10;
+            insertLocation.y += 10;
+            Sprite copy = SerialClone.clone(sprite);
+            copy.setX(insertLocation.x);
+            copy.setY(insertLocation.y);
+            System.out.println("SpriteTransfer: addSprite");      
+            //step.addSprite(copy);
+            //stepView.paste(copy);
+            
+            stepView.spritePasted(copy);
+            
+            //stepView.selectSpriteView(spriteView);
+            
+         } catch (UnsupportedFlavorException e) {
+            e.printStackTrace();
+         } catch (IOException e) {
+            e.printStackTrace();
+         }
+      }
+      
+      return true;
+   }
+
+
+   @Override
+   protected void exportDone(JComponent source, Transferable data, int action) {
+      
+      if (source instanceof SpriteView){
+         SpriteView spriteView = (SpriteView) source; 
+         Sprite sprite = spriteView.getSprite();
+         //spriteView.getParent();
+         
+         StepView stepView = (StepView) SwingUtilities.getAncestorOfClass(StepView.class, spriteView);
+         if (stepView == null)
+            return;
+         
+         if (action == MOVE && !alreadyCut){         
+            Step step = stepView.getStep();         
+            step.removeSprite(sprite);    
+            alreadyCut = true;
+            
+            // purposely shifted so it would be added to the old location
+            insertLocation.x -= 10;
+            insertLocation.y -= 10;
+
+         }
+         
+      }
+      
+      
+      super.exportDone(source, data, action);
+   }
+
+   public int getSourceActions(JComponent c) {
+      return COPY_OR_MOVE;
+   }
+
+   
+   class SpriteTransferable implements Transferable {
+
+      Sprite sprite;
+      public SpriteTransferable(Sprite sprite) {
+         this.sprite = sprite;
+      }
+
+      @Override
+      public Object getTransferData(DataFlavor flavor)
+            throws UnsupportedFlavorException, IOException {
+         if (!isDataFlavorSupported(flavor)) {
+            throw new UnsupportedFlavorException(flavor);
+         }
+         return sprite;
+      }
+
+      @Override
+      public DataFlavor[] getTransferDataFlavors() {
+         return new DataFlavor[] {serialSpriteFlavor}; 
+      }
+
+      @Override
+      public boolean isDataFlavorSupported(DataFlavor flavor) {
+         if (serialSpriteFlavor.equals(flavor)) {
+            return true;
+         }
+         return false;
+      }
+      
+   }
+}
 
 class SpriteView extends JPanel implements PropertyChangeListener {
       
    protected Sprite _sprite;
+      
+//   StepView getStep(){
+//      return SwingUtilities.getAncestorOfClass(StepView.class, this);
+//   }
    
    public SpriteView(Sprite sprite){
       _sprite = sprite;
       _sprite.addPropertyChangeListener(this);      
-//      init();
       updateBounds();
       updateStyle();
       updateName();
       setFocusable(true);
+      //setDragEnabled(true);
+      
+      
+      
+      setTransferHandler(new SpriteTransferHandler());
+      
+      ActionMap map = getActionMap();
+      map.put(TransferHandler.getCutAction().getValue(Action.NAME),
+              TransferHandler.getCutAction());
+      map.put(TransferHandler.getCopyAction().getValue(Action.NAME),
+              TransferHandler.getCopyAction());
+      map.put(TransferHandler.getPasteAction().getValue(Action.NAME),
+              TransferHandler.getPasteAction());
+      
+      InputMap imap = this.getInputMap();
+      imap.put(KeyStroke.getKeyStroke("meta X"),
+          TransferHandler.getCutAction().getValue(Action.NAME));
+      imap.put(KeyStroke.getKeyStroke("meta C"),
+          TransferHandler.getCopyAction().getValue(Action.NAME));
+      imap.put(KeyStroke.getKeyStroke("meta V"),
+          TransferHandler.getPasteAction().getValue(Action.NAME));
+
+//      
+//      
+//      addKeyListener(new KeyAdapter(){
+//
+//         @Override
+//         public void keyPressed(KeyEvent k){
+//            System.out.println("here too");
+//
+////            if (k.getKeyCode() == KeyEvent.VK_C){
+////               TransferHandler.getCutAction().actionPerformed(new ActionEvent(SpriteView.this,1,""));
+////
+////            } else if (k.getKeyCode() == KeyEvent.VK_V){
+////               TransferHandler.getPasteAction().actionPerformed(new ActionEvent(SpriteView.this,1,""));
+////               
+//////               TransferHandler handler = getTransferHandler();                
+//////               handler.
+////               
+////            }
+//         }
+//         
+//         
+//      });
+      
    }
-   
-   // Initialize the view
-   protected void init(){      
-   }
-   
-   Point origin = new Point(0,0);
-   
+
+   // Update the view based on the current attributes of the associated model
    void updateName(){
       setName(_sprite.getName());
    }
    
    protected void updateStyle(){
-      setForeground(_sprite.getForeground());
-      setBackground(_sprite.getBackground());
+      setForeground(((StyledSprite) _sprite).getForeground());
+      setBackground(((StyledSprite) _sprite).getBackground());
    }
    
-   // Update the view based on the current attributes of the associated model
    protected void updateBounds(){
-      //setForeground(model.getForeground());
-      
-      //origin = getModel().getStep().getView().getOrigin();
-     // Point modelLocation = model.getLocation();      
-      //modelLocation.translate(origin.x,origin.y);
-      
       setLocation(_sprite.getX(), _sprite.getY());
       setSize(_sprite.getWidth(), _sprite.getHeight());
-//      if (_sprite.isHasShadow() && shadowRenderer == null){
-//         shadowRenderer = new ShadowRenderer(this, 10);
-//      }
    }
    
-   public void updateModelLocation(Point newLocation){
-      _sprite.setX(newLocation.x - origin.x);
-      _sprite.setY(newLocation.y - origin.y);
-   }
-      
-//   Rectangle actualBounds = new Rectangle();
-//   public void setActualSize(int width, int height){
-//      setActualSize(new Dimension(width, height));
-//   }
-//   
-//   public void setActualSize(Dimension actualSize){
-//      
-//      actualBounds.setSize(actualSize);
-//      
-//      Dimension paintSize = (Dimension) actualSize.clone();
-//
-//      if (_sprite.isHasShadow()){
-//         paintSize.width += (2*shadowSize);
-//         paintSize.height += (2*shadowSize);
-//      }
-//      super.setSize(paintSize);
-//   }  
-//   
-//   public void setActualLocation(int x, int y){
-//      setActualLocation(new Point(x,y));
-//   }
-//   
-//   public void setActualLocation(Point p){
-//      
-//      int paintX = p.x;
-//      int paintY = p.y;
-//      
-//      actualBounds.setLocation(p);
-//      
-//      if (_sprite.isHasShadow()){
-//         paintX -= (shadowSize-shadowOffset);
-//         paintY -= (shadowSize-shadowOffset);
-//      }
-//      
-//      super.setLocation(paintX, paintY);
-//   }
-//   
-//   public int getActualWidth(){
-//      return getActualBounds().width;
-//   }
-//   
-//   public int getActualHeight(){
-//      return getActualBounds().height;
-//   }
-//
-//   public Rectangle getActualBounds() {
-//      return actualBounds;
-//   }
-//
-//   public Dimension getActualSize() {
-//      return actualBounds.getSize();
-//   }
-//   
-//   public Point getActualLocation() {
-//      return actualBounds.getLocation();
-//   }
-//
-//   
-//   ShadowRenderer shadowRenderer;
-//   int shadowSize = 10;
-//   int shadowOffset = 2;
-//   
-//   class ShadowRenderer {
-//
-//      SpriteView source;
-//      public ShadowRenderer(SpriteView source, int shadowSize){
-//         this.source = source;
-//         sourceActualSize = source.getActualSize();
-//         this.shadowSize = shadowSize;
-//      }
-//
-//      float shadowOpacity = 0.8f;
-//      int shadowSize = 10;
-//      Color shadowColor = Color.black;
-//      BufferedImage createShadowMask(BufferedImage image){ 
-//         BufferedImage mask = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB); 
-//
-//         Graphics2D g2d = mask.createGraphics(); 
-//         g2d.drawImage(image, 0, 0, null); 
-//         // Ar = As*Ad - Cr = Cs*Ad -> extract 'Ad' 
-//         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_IN, shadowOpacity)); 
-//         g2d.setColor(shadowColor); 
-//         g2d.fillRect(0, 0, image.getWidth(), image.getHeight()); 
-//         g2d.dispose(); 
-//         return mask; 
-//      } 
-//
-//      ConvolveOp getBlurOp(int size) {
-//         float[] data = new float[size * size];
-//         float value = 1 / (float) (size * size);
-//         for (int i = 0; i < data.length; i++) {
-//            data[i] = value;
-//         }
-//         return new ConvolveOp(new Kernel(size, size, data));
-//      }
-//
-//      BufferedImage shadowImage = null;
-//      Dimension sourceActualSize = null;
-//      public BufferedImage createShadowImage(){    
-//
-//         BufferedImage image = new BufferedImage(source.getActualWidth() + shadowSize * 2,
-//               source.getActualHeight() + shadowSize * 2, BufferedImage.TYPE_INT_ARGB);
-//         Graphics2D g2 = image.createGraphics();
-//         g2.translate(shadowSize,shadowSize);
-//         source.setDoubleBuffered(false);
-//         //source.paintPlain(g2);
-//         
-////         Container parent = new CellRendererPane();
-////         
-////         SwingUtilities.paintComponent(g2,source,parent,0,0,image.getWidth(),image.getHeight());
-//
-//         shadowImage = new BufferedImage(image.getWidth(),image.getHeight(),BufferedImage.TYPE_INT_ARGB);
-//         getBlurOp(shadowSize).filter(createShadowMask(image), shadowImage);
-//         g2.dispose();
-//         
-//         //Debug.info("[Shadow] shadowImage created: " + shadowImage);
-//
-//         return shadowImage;
-//      }
-//
-//      public void paintComponent(Graphics g){      
-//         Graphics2D g2d = (Graphics2D)g;
-//
-//         // create shadow image if the size of the source component has changed since last rendering attempt
-//         if (shadowImage == null || source.getActualHeight() != sourceActualSize.height || 
-//               source.getActualWidth() != sourceActualSize.width){
-//            createShadowImage();
-//            sourceActualSize = source.getActualSize();
-//         }
-//         //Debug.info("[Shadow] painting shadow" + shadowImage);
-//         g2d.drawImage(shadowImage, 0, 0, null, null);
-//      }
-//   }
-//   
-//   public void paintPlain(Graphics g){
-//      super.paint(g);
-//   }
-
    public void paint(Graphics g){
       
       // render the component in an offscreen buffer with shadow
       BufferedImage image = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
-      Graphics2D g2 = image.createGraphics();
-      
-//      if (shadowRenderer != null){
-//         shadowRenderer.paintComponent(g2);
-//         g2.translate((shadowSize-shadowOffset),(shadowSize-shadowOffset));
-//      }
-      
+      Graphics2D g2 = image.createGraphics();      
       super.paint(g2);
       
       Graphics2D g2d = (Graphics2D) g;      
-      ((Graphics2D) g).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,_sprite.getOpacity()));
+//      ((Graphics2D) g).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,_sprite.getOpacity()));
       g2d.drawImage(image,0,0,null,null);
 
 
@@ -242,13 +387,6 @@ class SpriteView extends JPanel implements PropertyChangeListener {
    @Override
    public void propertyChange(PropertyChangeEvent evt) {
       
-//      if (getParent() != null){
-//         Rectangle r = new Rectangle(getBounds());
-//         getParent().repaint(r.x,r.y,r.width,r.height);
-////         getTopLevelAncestor().repaint();
-//      }
-
-      
       if (evt.getPropertyName().equals(Sprite.PROPERTY_X)){         
          updateBounds();
       } else if (evt.getPropertyName().equals(Sprite.PROPERTY_Y)){      
@@ -257,27 +395,17 @@ class SpriteView extends JPanel implements PropertyChangeListener {
          updateBounds();
       } else if (evt.getPropertyName().equals(Sprite.PROPERTY_HEIGHT)){
          updateBounds();
-      } else if (evt.getPropertyName().equals(Sprite.PROPERTY_BACKGROUND) ||
-            evt.getPropertyName().equals(Sprite.PROPERTY_FOREGROUND)){
+      } else if (evt.getPropertyName().equals(StyledSprite.PROPERTY_BACKGROUND) ||
+            evt.getPropertyName().equals(StyledSprite.PROPERTY_FOREGROUND)){
          updateStyle();   
-      } else if (evt.getPropertyName().equals(Sprite.PROPERTY_OPACITY)){
+      } else if (evt.getPropertyName().equals(StyledSprite.PROPERTY_OPACITY)){
 
       } else if (evt.getPropertyName().equals(Sprite.PROPERTY_NAME)){
          updateName();
       } else {  
          return;
       }
-
-//      if (getParent() != null){
-//         Rectangle r = new Rectangle(getBounds());
-//         //getParent().repaint(r.x,r.y,r.width,r.height);
-//         //getParent().repaint();
-//         // TODO: fix this
-////         if (getTopLevelAncestor() != null)
-////            getTopLevelAncestor().repaint();
-//         repaint();
-//      }
-
+      
    }
 
    public Sprite getSprite() {
@@ -288,8 +416,8 @@ class SpriteView extends JPanel implements PropertyChangeListener {
 
 class ViewFactory {
    
-   public static ContextImageView createView(AbstractContextImage abstractContextImage){
-      return new ContextImageView(abstractContextImage);
+   public static ContextImageView createView(ContextImage contextImage){
+      return new ContextImageView(contextImage);
    }
    
    public static SpriteView createView(Sprite sprite){
@@ -303,13 +431,5 @@ class ViewFactory {
          return new CircleView((Circle)sprite);
 
       return new SpriteView(sprite);
-      //      else if (sprite instanceof SklAnchorModel)
-//         return new SklAnchorView(sprite);
-//      else if (sprite instanceof SklImageModel)
-//         return new SklImageView(sprite);
-//      else if (sprite instanceof SklControlBox)
-//         return new SklControlBoxView(sprite);
-//      else         
-//         return new SpriteView(sprite);
    }      
 }

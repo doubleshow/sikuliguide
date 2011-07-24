@@ -7,8 +7,10 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.ListModel;
 import javax.swing.event.ChangeListener;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotUndoException;
@@ -26,25 +28,38 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
    }
    
    @ElementList
-   ArrayList<Sprite> _spriteList = new ArrayList<Sprite>();
+   DefaultListModel _spriteList = new DefaultListModel();
    
-   AbstractContextImage _contextImage;
-   public AbstractContextImage getContextImage(){
+   int canvasWidth;
+   int canvasHeight;   
+   
+   ContextImage _contextImage;
+   public ContextImage getContextImage(){
       return _contextImage;
-   }
-   public void setContextImage(AbstractContextImage contextImage){
+   }   
+   
+   public void setContextImage(ContextImage contextImage){
       _contextImage = contextImage;
    }
    
    public List<Sprite> getSprites(){
-      return _spriteList;
+      List<Sprite> aList = new ArrayList<Sprite>();
+      for (int i = 0; i < _spriteList.getSize(); ++i){
+         aList.add((Sprite) _spriteList.getElementAt(i));
+      }
+      return aList;
    }
    
    public void addSprite(Sprite sprite) {
-      _spriteList.add(sprite);      
+      _spriteList.addElement(sprite);      
       sprite.addPropertyChangeListener(this);   
       fireStateChanged();
       //fireDataContentsChanged();   
+   }
+   
+   
+   public int indexOf(Sprite sprite){
+      return _spriteList.indexOf(sprite);
    }
    
    public void addSprite(int index, Sprite sprite){
@@ -54,14 +69,15 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
    }
    
    public void removeSprite(Sprite sprite){
-      _spriteList.remove(sprite);      
+      _spriteList.removeElement(sprite);      
       sprite.removePropertyChangeListener(this);            
       fireStateChanged();
       //fireDataContentsChanged();
    }
    
    public void removeSprite(final int index){
-      final Sprite spriteRemoved = _spriteList.remove(index);      
+      final Sprite spriteRemoved = (Sprite) _spriteList.getElementAt(index);
+      _spriteList.removeElement(index);      
       spriteRemoved.removePropertyChangeListener(this);            
       fireStateChanged();
       //fireDataContentsChanged();

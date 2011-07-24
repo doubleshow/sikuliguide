@@ -101,7 +101,7 @@ public class StepPlayView extends JWindow {
       
       // add to content pane
       for (Sprite sprite : stepModelCopy.getSprites()){
-         sprite.setOpacity(0f);         
+         //sprite.setOpacity(0f);         
          SpriteView view = ViewFactory.createView(sprite);
          add(view);
       }

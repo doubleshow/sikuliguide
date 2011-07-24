@@ -235,12 +235,20 @@ class ControlBoxView extends SpriteView {
       setBounds(rnew);
       updateControlPoints();
 
-
       r.add(getBounds());
-      if (getParent() != null){
-         getParent().repaint(r.x,r.y,r.width,r.height);
-         getParent().repaint();
+      //repaint();
+//      if (getParent() != null){
+//        // getParent().repaint(r.x,r.y,r.width,r.height);
+//        // getParent().repaint();
+//         
+//      }
+      
+      if (getTopLevelAncestor() != null){
+         // getParent().repaint(r.x,r.y,r.width,r.height);
+         getTopLevelAncestor().repaint();
+
       }
+
 
    }
 

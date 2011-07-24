@@ -99,7 +99,7 @@ public class StepTestCase {
    @Test
    public void testSetContextImage(){
             
-      AbstractContextImage contextImage = mock(AbstractContextImage.class);
+      ContextImage contextImage = mock(ContextImage.class);
       
       
       Step step = new Step();

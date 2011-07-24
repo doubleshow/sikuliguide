@@ -13,6 +13,22 @@ import java.io.Serializable;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
 
+
+interface StyledSprite extends Sprite {
+   public void setOpacity(float opacity);
+   public float getOpacity();   
+   public boolean isWithShadow();
+   public void setWithShadow(boolean hasShadow);      
+   public Color getBackground();
+   public Color getForeground();   
+   public void setBackground(Color color);
+   public void setForeground(Color color);
+   
+   static public final String PROPERTY_OPACITY = "opacity";
+   static public final String PROPERTY_FOREGROUND = "foreground";
+   static public final String PROPERTY_BACKGROUND = "background";
+}
+
 public interface Sprite {
    public void setX(int x);
    public int getX();
@@ -22,20 +38,10 @@ public interface Sprite {
    public int getWidth();
    public void setHeight(int width);
    public int getHeight();
-   public void setOpacity(float opacity);
-   public float getOpacity();   
-   public boolean isWithShadow();
-   public void setWithShadow(boolean hasShadow);
    
    public String getName();
    public void setName(String name);
    
-   public Color getBackground();
-   public Color getForeground();
-   
-   public void setBackground(Color color);
-   public void setForeground(Color color);
-
    
    public void addPropertyChangeListener(PropertyChangeListener listener);
    public void removePropertyChangeListener(PropertyChangeListener listener);
@@ -45,14 +51,11 @@ public interface Sprite {
    static public final String PROPERTY_X = "x";
    static public final String PROPERTY_Y = "y";   
    static public final String PROPERTY_NAME = "name";   
-   static public final String PROPERTY_OPACITY = "opacity";
-   static public final String PROPERTY_FOREGROUND = "foreground";
-   static public final String PROPERTY_BACKGROUND = "background";
 }
 
 
 @Root
-class DefaultSprite implements Sprite, Serializable {
+class DefaultSprite implements StyledSprite, Serializable {
    
    public DefaultSprite(){      
    }

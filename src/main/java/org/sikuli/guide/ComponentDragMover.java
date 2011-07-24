@@ -322,7 +322,6 @@ public class ComponentDragMover extends MouseAdapter{
 
       source = e.getComponent();
       origin = source.getLocation();
-
       int width  = source.getSize().width  - dragInsets.left - dragInsets.right;
       int height = source.getSize().height - dragInsets.top - dragInsets.bottom;
 
@@ -330,7 +329,6 @@ public class ComponentDragMover extends MouseAdapter{
 
       if (r.contains(e.getPoint()))
          setupForDragging(e);
-
    }
 
 
@@ -357,7 +355,7 @@ public class ComponentDragMover extends MouseAdapter{
 //      if (destination instanceof SpriteView){
 //         location = ((SpriteView) destination).getActualLocation();
 //      }else {
-         location = destination.getLocation();         
+         location = destination.getLocation();  
 //      }
 
       if (changeCursor){
@@ -394,17 +392,14 @@ public class ComponentDragMover extends MouseAdapter{
       int dragY = getDragDistance(dragged.y, pressed.y, snapSize.height);
 
       
-//      if (destination instanceof SikuliGuideComponent)
-//         ((SikuliGuideComponent) destination).setActualLocation(location.x + dragX, location.y + dragY);
-//      else if (destination instanceof SpriteView)
-//         ((SpriteView) destination).setActualLocation(location.x + dragX, location.y + dragY);
-//      else
-         destination.setLocation(location.x + dragX, location.y + dragY);
+      destination.setLocation(location.x + dragX, location.y + dragY);
 
       
       Point newLocation = new Point(location.x + dragX, location.y + dragY);
-      if (draggedMoveListener != null)
-         draggedMoveListener.componentMoved(source, origin, newLocation);
+      //System.out.println("Temp location: " + newLocation);
+
+//      if (draggedMoveListener != null)
+//         draggedMoveListener.componentMoved(source, origin, newLocation);
    }
 
 
@@ -440,7 +435,8 @@ public class ComponentDragMover extends MouseAdapter{
    @Override
    public void mouseReleased(MouseEvent e){
 
-      source.removeMouseMotionListener(this);
+      if (source != null)
+         source.removeMouseMotionListener(this);
 
       if (changeCursor)
          source.setCursor( originalCursor );

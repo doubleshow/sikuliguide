@@ -10,7 +10,7 @@ import javax.swing.JPanel;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-interface Text extends Sprite {
+interface Text extends StyledSprite {
    
    public void setText(String text);
    public String getText();
@@ -73,6 +73,9 @@ class TextView extends SpriteView {
    JPanel panel;
    JLabel label;
    
+   final static int MIN_WIDTH = 20;
+   final static int MIN_HEIGHT = 20;   
+   
    Text _textSprite;
    
    public TextView(Text model){
@@ -97,7 +100,6 @@ class TextView extends SpriteView {
          add(panel);
       }
 
-      //TextSprite _textSprite;
       label.setText(_textSprite.getText());
       label.setSize(label.getPreferredSize());
       label.setLocation(_textSprite.padding,_textSprite.padding);      
@@ -110,12 +112,11 @@ class TextView extends SpriteView {
       size.width = size.width + 2*_textSprite.padding;
       size.height = size.height + 2*_textSprite.padding;
       panel.setSize(size);
-      //setActualSize(size);
       
       setSize(size);
       
-      _sprite.setWidth(size.width);
-      _sprite.setHeight(size.height);
+      _sprite.setWidth(Math.max(size.width, MIN_WIDTH));
+      _sprite.setHeight(Math.max(size.height, MIN_HEIGHT));
       
       updateBounds();
       updateStyle();

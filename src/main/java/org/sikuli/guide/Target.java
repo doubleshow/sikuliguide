@@ -11,7 +11,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-interface Target extends Sprite {
+interface Target extends StyledSprite {
    public BufferedImage getBufferedImage();
    public boolean isFound();
    public void setFound(boolean visible);
@@ -49,10 +49,10 @@ class DefaultTarget extends DefaultSprite implements Target{
 class ContextTarget extends DefaultTarget {
    
    
-   private AbstractContextImage contextImage;
+   private ContextImage contextImage;
    private BufferedImage image = null;
    
-   ContextTarget(AbstractContextImage contextImage){
+   ContextTarget(ContextImage contextImage){
       this.contextImage = contextImage;
    }   
    
@@ -73,12 +73,12 @@ class ContextTarget extends DefaultTarget {
       return image;
    }
    
-   public void setContextImage(ContextImage contextImage) {
+   public void setContextImage(DefaultContextImage contextImage) {
       this.contextImage = contextImage;
    }
 
 
-   public AbstractContextImage getContextImage() {
+   public ContextImage getContextImage() {
       return contextImage;
    }
 }

@@ -4,13 +4,17 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.TransferHandler;
 
 import org.sikuli.ui.Slide;
 import org.sikuli.ui.SlideEditView;
@@ -92,14 +96,19 @@ public class StepView extends SlideEditView {
       if (_step == null)
          return;
       
+      
+      //System.out.println("StepView:updateStep: adding " + _step.getSprites().size() + " steps");
       for (Sprite sprite : _step.getSprites()){       
          SpriteView view = ViewFactory.createView(sprite);
-         contentLayer.add(view); 
+        // System.out.println(sprite.getClass() + " : " + sprite);         
+         contentLayer.add(view,0); 
       }      
       
+      ContextImage contextImage = _step.getContextImage();
       ContextImageView view = ViewFactory.createView(_step.getContextImage());
+      view.setLocation(contextImage.getX(),contextImage.getY());
       contentLayer.add(view);
-      repaint();
+      repaint(); 
    }
    
    
@@ -133,6 +142,25 @@ public class StepView extends SlideEditView {
       contentLayer.setLayout(null);
       contentLayer.setSize(640,480);//_step.getContextImage().getWidth(), _step.getContextImage().getHeight());
       add(contentLayer);
+      
+      
+      setPreferredSize(new Dimension(640,480));
+      
+      
+      
+      setTransferHandler(new SpriteTransferHandler());
+      addKeyListener(new KeyAdapter(){
+         
+         @Override
+         public void keyPressed(KeyEvent k){
+            System.out.println("here");
+            if (k.getKeyCode() == KeyEvent.VK_C){
+               TransferHandler handler = getTransferHandler(); 
+               handler.exportToClipboard((JComponent) k.getSource(), Toolkit.getDefaultToolkit().getSystemClipboard(), TransferHandler.COPY);
+            }
+         }
+      });
+
    }
    
    StepView(Step step){
@@ -160,5 +188,10 @@ public class StepView extends SlideEditView {
 //   });
 //   
 //      _regionModel.setBounds(getBounds());
+   }
+
+
+   public Step getStep() {
+      return _step;
    }
 }

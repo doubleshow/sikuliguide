@@ -113,10 +113,10 @@ public class StoryTestCase {
       story.addStep(FixtureFactory.createStep());
       
       
-      StoryListView view = new StoryListView(story);
+      //StoryListView view = new StoryListView(story);
       
       
-      ViewTester.viewInScrollPane(view);
+      //ViewTester.viewInScrollPane(view);
 
 
    }
