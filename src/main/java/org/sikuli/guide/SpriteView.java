@@ -291,7 +291,7 @@ class SpriteView extends JPanel implements PropertyChangeListener {
       updateBounds();
       updateStyle();
       updateName();
-      setFocusable(true);
+      //setFocusable(true);
       //setDragEnabled(true);
       
       

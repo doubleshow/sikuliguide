@@ -153,7 +153,7 @@ public class StepView extends SlideEditView {
          
          @Override
          public void keyPressed(KeyEvent k){
-            System.out.println("here");
+            //System.out.println("here");
             if (k.getKeyCode() == KeyEvent.VK_C){
                TransferHandler handler = getTransferHandler(); 
                handler.exportToClipboard((JComponent) k.getSource(), Toolkit.getDefaultToolkit().getSystemClipboard(), TransferHandler.COPY);
