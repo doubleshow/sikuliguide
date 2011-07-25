@@ -13,7 +13,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -33,6 +35,35 @@ import org.sikuli.ui.Slide;
 
 
 class StepEditKit {
+
+   static Action selectAllAction  =       
+      new AbstractAction("Select All"){
+
+      {
+         putValue(Action.NAME, "selectAllAction");
+      }
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+         StepEditView editView = (StepEditView) e.getSource();
+         editView.selectionTool.selectAll();
+      }
+   };
+   
+   static Action selectNoneAction  =       
+      new AbstractAction("Select None"){
+
+      {
+         putValue(Action.NAME, "selectNoneAction");
+      }
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+         StepEditView editView = (StepEditView) e.getSource();
+         editView.selectionTool.clearSelection();
+      }
+   };
+
 
    static Action deleteSelectedSpritesAction =       
       new AbstractAction("Delete"){
@@ -125,7 +156,7 @@ class StepEditKit {
          moveHelper(e, Direction.RIGHT);
       }
    };   
-   
+
    static Action moveSelectedSpritesLeftAction =       
       new AbstractAction("Move Left"){
 
@@ -150,9 +181,51 @@ class StepEditView extends StepView {
 
    SelectionTool selectionTool = new SelectionTool();
    MoveTool moveTool = new MoveTool();
-   EditTool editTool = new EditTool();   
+   EditTool editTool = new EditTool();  
+
+   private void initActionInputMaps(){
+      ActionMap map = getActionMap();
+      InputMap imap = getInputMap();
+
+      map.put(StepEditKit.deleteSelectedSpritesAction.getValue(Action.NAME), StepEditKit.deleteSelectedSpritesAction);
+      imap.put(KeyStroke.getKeyStroke("DELETE"), StepEditKit.deleteSelectedSpritesAction.getValue(Action.NAME));
+      imap.put(KeyStroke.getKeyStroke("BACK_SPACE"), StepEditKit.deleteSelectedSpritesAction.getValue(Action.NAME));
+
+      map.put(StepEditKit.moveSelectedSpritesUpAction.getValue(Action.NAME), StepEditKit.moveSelectedSpritesUpAction);
+      map.put(StepEditKit.moveSelectedSpritesDownAction.getValue(Action.NAME), StepEditKit.moveSelectedSpritesDownAction);
+      map.put(StepEditKit.moveSelectedSpritesLeftAction.getValue(Action.NAME), StepEditKit.moveSelectedSpritesLeftAction);
+      map.put(StepEditKit.moveSelectedSpritesRightAction.getValue(Action.NAME), StepEditKit.moveSelectedSpritesRightAction);
+      imap.put(KeyStroke.getKeyStroke("UP"), StepEditKit.moveSelectedSpritesUpAction.getValue(Action.NAME));
+      imap.put(KeyStroke.getKeyStroke("DOWN"), StepEditKit.moveSelectedSpritesDownAction.getValue(Action.NAME));
+      imap.put(KeyStroke.getKeyStroke("LEFT"), StepEditKit.moveSelectedSpritesLeftAction.getValue(Action.NAME));
+      imap.put(KeyStroke.getKeyStroke("RIGHT"), StepEditKit.moveSelectedSpritesRightAction.getValue(Action.NAME));
+
+
+      map.put(StepEditKit.selectAllAction.getValue(Action.NAME), StepEditKit.selectAllAction);
+      map.put(StepEditKit.selectNoneAction.getValue(Action.NAME), StepEditKit.selectNoneAction);
+      imap.put(KeyStroke.getKeyStroke("meta A"), StepEditKit.selectAllAction.getValue(Action.NAME));
+      imap.put(KeyStroke.getKeyStroke("ESCAPE"), StepEditKit.selectNoneAction.getValue(Action.NAME));
+
+
+      map.put(TransferHandler.getCutAction().getValue(Action.NAME),
+            TransferHandler.getCutAction());
+      map.put(TransferHandler.getCopyAction().getValue(Action.NAME),
+            TransferHandler.getCopyAction());
+      map.put(TransferHandler.getPasteAction().getValue(Action.NAME),
+            TransferHandler.getPasteAction());
+      imap.put(KeyStroke.getKeyStroke("meta X"),
+            TransferHandler.getCutAction().getValue(Action.NAME));
+      imap.put(KeyStroke.getKeyStroke("meta C"),
+            TransferHandler.getCopyAction().getValue(Action.NAME));
+      imap.put(KeyStroke.getKeyStroke("meta V"),
+            TransferHandler.getPasteAction().getValue(Action.NAME));
+
+
+   }
 
    public StepEditView() {
+
+      initActionInputMaps();
 
       controlLayer.setOpaque(false);
       controlLayer.setLayout(null);
@@ -165,22 +238,6 @@ class StepEditView extends StepView {
       add(controlLayer,0);
       add(editLayer,0);      
 
-      ActionMap map = getActionMap();
-      map.put(StepEditKit.deleteSelectedSpritesAction.getValue(Action.NAME), StepEditKit.deleteSelectedSpritesAction);
-      
-      map.put(StepEditKit.moveSelectedSpritesUpAction.getValue(Action.NAME), StepEditKit.moveSelectedSpritesUpAction);
-      map.put(StepEditKit.moveSelectedSpritesDownAction.getValue(Action.NAME), StepEditKit.moveSelectedSpritesDownAction);
-      map.put(StepEditKit.moveSelectedSpritesLeftAction.getValue(Action.NAME), StepEditKit.moveSelectedSpritesLeftAction);
-      map.put(StepEditKit.moveSelectedSpritesRightAction.getValue(Action.NAME), StepEditKit.moveSelectedSpritesRightAction);
-
-      InputMap imap = getInputMap();
-      imap.put(KeyStroke.getKeyStroke("DELETE"), StepEditKit.deleteSelectedSpritesAction.getValue(Action.NAME));
-      imap.put(KeyStroke.getKeyStroke("BACK_SPACE"), StepEditKit.deleteSelectedSpritesAction.getValue(Action.NAME));
-
-      imap.put(KeyStroke.getKeyStroke("UP"), StepEditKit.moveSelectedSpritesUpAction.getValue(Action.NAME));
-      imap.put(KeyStroke.getKeyStroke("DOWN"), StepEditKit.moveSelectedSpritesDownAction.getValue(Action.NAME));
-      imap.put(KeyStroke.getKeyStroke("LEFT"), StepEditKit.moveSelectedSpritesLeftAction.getValue(Action.NAME));
-      imap.put(KeyStroke.getKeyStroke("RIGHT"), StepEditKit.moveSelectedSpritesRightAction.getValue(Action.NAME));
 
       setFocusable(true);
 
@@ -365,9 +422,8 @@ class StepEditView extends StepView {
    class MoveTool extends MouseAdapter implements KeyListener {
       Proxy proxy = new Proxy();
 
-
       MoveTool(){         
-         controlLayer.add(proxy);
+         editLayer.add(proxy);
       }
 
       ComponentDragMover cm;
@@ -477,10 +533,19 @@ class StepEditView extends StepView {
       ControlBox controlBox = new ControlBox();
       ControlBoxView controlBoxView = new ControlBoxView(controlBox);
 
+      Map<SpriteView, ControlBoxView> controlBoxes = new HashMap<SpriteView, ControlBoxView>();
+
       SelectionTool(){
-         //selectionList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-         selectionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-         controlLayer.add(controlBoxView);
+         selectionList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+         //selectionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+         //selectionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+         //         controlLayer.add(controlBoxView);
+      }
+
+      public void selectAll() {
+         for (Sprite sprite : _step.getSprites()){
+            select(sprite);
+         }
       }
 
       void setListModel(ListModel listModel){
@@ -489,7 +554,8 @@ class StepEditView extends StepView {
 
       void clearSelection(){
          selectionList.clearSelection();
-         controlBoxView.setVisible(false);
+         controlLayer.removeAll();
+         repaint();
       }
 
       List<SpriteView> getSelectedSpriteViews(){
@@ -500,6 +566,16 @@ class StepEditView extends StepView {
          }         
          return ret;
       }
+      
+      List<Sprite> getSelectedSprites(){
+         int[] indices = selectionList.getSelectedIndices();
+         List<Sprite> ret = new ArrayList<Sprite>();
+         for (int i = 0; i < indices.length; ++i){
+            ret.add(getStep().getSprites().get(indices[i]));
+         }         
+         return ret;
+      }
+
 
       @Override
       public void mouseClicked(MouseEvent arg0) {
@@ -511,6 +587,10 @@ class StepEditView extends StepView {
 
       @Override
       public void mouseExited(MouseEvent arg0) {
+      }      
+
+      @Override
+      public void mouseReleased(MouseEvent arg0) {
       }
 
       @Override
@@ -525,34 +605,37 @@ class StepEditView extends StepView {
             editTool.endEdit();
 
          } else if (e.getSource() instanceof SpriteView){
+            SpriteView spriteView = (SpriteView) e.getSource();
 
+            if (e.getClickCount() == 1){
 
-            if (e.getClickCount() == 1 && e.getSource() instanceof SpriteView){
+               if (!e.isMetaDown()){
+                  clearSelection();
+               }
 
-               // do select
-
-               SpriteView spriteView = (SpriteView) e.getSource();
-
-               selectionTool.select(spriteView);
-
-               //
-               //               Sprite sprite = spriteView.getSprite();
-               //
-               //               int index = _step.indexOf(selectedSpriteView.getSprite());
-               //               selectionList.setSelectedIndex(index);
-
-
+               select(spriteView);
             }
 
          }
       }
 
+      private void select(Sprite sprite){
+         int index = _step.indexOf(sprite);
+         selectionList.addSelectionInterval(index,index);
+
+         System.out.println("here");
+         ControlBox box = new ControlBox();
+         ControlBoxView view = new ControlBoxView(box);
+         box.setTarget(sprite);
+         controlLayer.add(view);
+
+         view.setVisible(true);
+         view.repaint();
+
+      }
+
       private void select(SpriteView spriteView) {
-         int index = _step.indexOf(spriteView.getSprite());
-         selectionList.setSelectedIndex(index);    
-         controlBoxView.setVisible(true);
-         controlBox.setTarget(spriteView.getSprite());
-         //  spriteView.requestFocus();
+         select(spriteView.getSprite());
       }
 
 
@@ -572,9 +655,6 @@ class StepEditView extends StepView {
       }
 
 
-      @Override
-      public void mouseReleased(MouseEvent arg0) {
-      }
    }
 
 
@@ -611,10 +691,28 @@ class StepEditView extends StepView {
       addListenerToSprite(spriteView);
       selectionTool.select(spriteView);    
    }
+   
+   public void spritesPasted(List<Sprite> sprites) {
+      selectionTool.clearSelection();
+      for (Sprite sprite : sprites){
+         _step.addSprite(sprite);      
+         SpriteView spriteView = ViewFactory.createView(sprite);
+         contentLayer.add(spriteView,0);
+         addListenerToSprite(spriteView);
+         selectionTool.select(spriteView);
+      }
+   }
+   
+   public void spriteCut(Sprite sprite) {
+      _step.removeSprite(sprite);
+      selectionTool.clearSelection();      
+   }
+
 
    public Sprite getSelectedSprite() {
       return selectionTool.getSelectedSpriteView().getSprite();
    }
+
 
 
 

@@ -57,6 +57,9 @@ public interface Sprite {
 @Root
 class DefaultSprite implements StyledSprite, Serializable {
    
+   private static final int MIN_HEIGHT = 20;
+   private static final int MIN_WIDTH = 20;
+
    public DefaultSprite(){      
    }
    
@@ -103,9 +106,9 @@ class DefaultSprite implements StyledSprite, Serializable {
    @Attribute 
    private int y = 0;
    @Attribute
-   private int width = 0;
+   private int width = MIN_WIDTH;
    @Attribute
-   private int height = 0;
+   private int height = MIN_HEIGHT;
    @Attribute
    private String name = "";
    
@@ -241,6 +244,7 @@ class DefaultSprite implements StyledSprite, Serializable {
    
    @Override
    public void setHeight(int height) {
+      height = Math.max(MIN_HEIGHT,height);
       int old = this.height;
       this.height = height;
       this.pcs.firePropertyChange(PROPERTY_HEIGHT, old, height);
@@ -248,6 +252,7 @@ class DefaultSprite implements StyledSprite, Serializable {
 
    @Override
    public void setWidth(int width) {
+      width = Math.max(MIN_WIDTH,width);
       int old = this.width;
       this.width = width;
       this.pcs.firePropertyChange(PROPERTY_WIDTH, old, width);

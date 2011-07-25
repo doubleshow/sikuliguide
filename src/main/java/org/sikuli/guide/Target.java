@@ -2,6 +2,7 @@ package org.sikuli.guide;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -91,6 +92,8 @@ class TargetView extends SpriteView {
       super(targetSprite);
       _target = targetSprite;
       setOpaque(false);
+//      setMinimumSize(new Dimension(25,25));
+//      updateBounds();
    }
    
    

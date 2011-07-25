@@ -44,6 +44,7 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.io.OutputStream;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 class SerialClone {
@@ -120,9 +121,10 @@ class SerialClone {
 class SpriteTransferHandler extends TransferHandler{
       
    DataFlavor serialSpriteFlavor = new DataFlavor(Sprite.class, "Sprite");
+   DataFlavor serialArrayListFlavor = new DataFlavor(ArrayList.class, "ArrayList");
    
    //Sprite spriteBeingTransferred;
-   static Point insertLocation = new Point();
+   static Point insertOffset = new Point();
    static boolean alreadyCut = true;
    
    protected Transferable createTransferable(JComponent c) {
@@ -130,14 +132,27 @@ class SpriteTransferHandler extends TransferHandler{
       if (c instanceof SpriteView) {
          SpriteView source = (SpriteView) c;
          Sprite copy = SerialClone.clone(source.getSprite());  
-         insertLocation.setLocation(copy.getX(), copy.getY());
+         //insertLocation.setLocation(copy.getX(), copy.getY());
+         insertOffset.setLocation(0,0);//copy.getX(), copy.getY());
          alreadyCut = false;
          return new SpriteTransferable(copy);
+      }else if (c instanceof StepEditView){
+         
+         
+         StepEditView editView = (StepEditView) c;
+         SpriteView source = editView.selectionTool.getSelectedSpriteView();
+         Sprite copy = SerialClone.clone(source.getSprite());  
+         insertOffset.setLocation(0,0);//copy.getX(), copy.getY());
+         alreadyCut = false;
+
+         List<Sprite> sprites = editView.selectionTool.getSelectedSprites();
+            
+         return new ArrayListTransferable<Sprite>(sprites);         
       }
       return null;
    }
    
-   private boolean hasLocalArrayListFlavor(DataFlavor[] flavors) {
+   private boolean hasSerialSpriteFlavor(DataFlavor[] flavors) {
       if (serialSpriteFlavor == null) {
          return false;
       }
@@ -149,13 +164,29 @@ class SpriteTransferHandler extends TransferHandler{
       }
       return false;
    }
+   
+   private boolean hasSerialArrayListFlavor(DataFlavor[] flavors) {
+      if (serialArrayListFlavor == null) {
+         return false;
+      }
+
+      for (int i = 0; i < flavors.length; i++) {
+         if (flavors[i].equals(serialArrayListFlavor)) {
+            return true;
+         }
+      }
+      return false;
+   }
 
    
    @Override
    public boolean canImport(TransferSupport support){
       System.out.println("SpriteTransfer: canImport");      
       DataFlavor[] flavors = support.getDataFlavors();
-      if (hasLocalArrayListFlavor(flavors)) {
+      if (hasSerialSpriteFlavor(flavors)) {
+         return true;
+      }
+      if (hasSerialArrayListFlavor(flavors)) {
          return true;
       }
       return false;
@@ -171,34 +202,34 @@ class SpriteTransferHandler extends TransferHandler{
          return false;
       }
       
-      if (source instanceof SpriteView){
-         SpriteView spriteView = (SpriteView) source; 
+      if (source instanceof StepEditView){
+         StepEditView stepView = (StepEditView) source;
+
          try {
-            Sprite sprite = null;
-            if (hasLocalArrayListFlavor(support.getDataFlavors())){
-               sprite = (Sprite) transferable.getTransferData(serialSpriteFlavor);
+            List<Sprite> sprites;
+            if (hasSerialSpriteFlavor(support.getDataFlavors())){
+               sprites = new ArrayList<Sprite>();
+               Sprite sprite = (Sprite) transferable.getTransferData(serialSpriteFlavor);
+               sprites.add(sprite);
+            }else if (hasSerialArrayListFlavor(support.getDataFlavors())){
+               sprites = (ArrayList<Sprite>) transferable.getTransferData(serialArrayListFlavor);
             }else{
                return false;
             }
             
-            StepEditView stepView = (StepEditView) SwingUtilities.getAncestorOfClass(StepEditView.class, spriteView);
-            if (stepView == null)
-               return false;            
-            Step step = stepView.getStep();
+            insertOffset.x += 10;
+            insertOffset.y += 10;         
+            List<Sprite> spritesToPaste = new ArrayList<Sprite>();
+            for (Sprite sprite : sprites){
+                        
+               // TODO: how come object is not serialized but still the same instance
+               Sprite copy = SerialClone.clone(sprite);
+               copy.setX(sprite.getX() + insertOffset.x);
+               copy.setY(sprite.getY() + insertOffset.y);
+               spritesToPaste.add(copy);
+            }
             
-            // TODO: how come object is not serialized but still the same instance
-            insertLocation.x += 10;
-            insertLocation.y += 10;
-            Sprite copy = SerialClone.clone(sprite);
-            copy.setX(insertLocation.x);
-            copy.setY(insertLocation.y);
-            System.out.println("SpriteTransfer: addSprite");      
-            //step.addSprite(copy);
-            //stepView.paste(copy);
-            
-            stepView.spritePasted(copy);
-            
-            //stepView.selectSpriteView(spriteView);
+            stepView.spritesPasted(spritesToPaste);
             
          } catch (UnsupportedFlavorException e) {
             e.printStackTrace();
@@ -214,24 +245,21 @@ class SpriteTransferHandler extends TransferHandler{
    @Override
    protected void exportDone(JComponent source, Transferable data, int action) {
       
-      if (source instanceof SpriteView){
-         SpriteView spriteView = (SpriteView) source; 
-         Sprite sprite = spriteView.getSprite();
-         //spriteView.getParent();
+      if (source instanceof StepEditView){
+         StepEditView stepView = (StepEditView) source;
+         Step step = stepView.getStep();
          
-         StepView stepView = (StepView) SwingUtilities.getAncestorOfClass(StepView.class, spriteView);
-         if (stepView == null)
-            return;
+         if (action == MOVE && !alreadyCut){
          
-         if (action == MOVE && !alreadyCut){         
-            Step step = stepView.getStep();         
-            step.removeSprite(sprite);    
-            alreadyCut = true;
-            
-            // purposely shifted so it would be added to the old location
-            insertLocation.x -= 10;
-            insertLocation.y -= 10;
+            for (SpriteView spriteView : stepView.selectionTool.getSelectedSpriteViews()){
+               Sprite sprite = spriteView.getSprite();
+               stepView.spriteCut(sprite);
+            }
 
+            alreadyCut = true;
+            // purposely shifted so it would be added to the old location
+            insertOffset.x -= 10;
+            insertOffset.y -= 10;
          }
          
       }
@@ -244,6 +272,34 @@ class SpriteTransferHandler extends TransferHandler{
       return COPY_OR_MOVE;
    }
 
+   public class ArrayListTransferable<T> implements Transferable {
+      List<T> data;
+
+      public ArrayListTransferable(List<T> alist) {
+         data = alist;
+      }
+
+      public Object getTransferData(DataFlavor flavor)
+      throws UnsupportedFlavorException {
+         if (!isDataFlavorSupported(flavor)) {
+            throw new UnsupportedFlavorException(flavor);
+         }
+         return data;
+      }
+
+      public DataFlavor[] getTransferDataFlavors() {
+         return new DataFlavor[] { //localArrayListFlavor,
+               serialArrayListFlavor };
+      }
+
+      public boolean isDataFlavorSupported(DataFlavor flavor) {
+         if (serialArrayListFlavor.equals(flavor)) {
+            return true;
+         }
+         return false;
+      }
+   }
+   
    
    class SpriteTransferable implements Transferable {
 
@@ -298,21 +354,21 @@ class SpriteView extends JPanel implements PropertyChangeListener {
       
       setTransferHandler(new SpriteTransferHandler());
       
-      ActionMap map = getActionMap();
-      map.put(TransferHandler.getCutAction().getValue(Action.NAME),
-              TransferHandler.getCutAction());
-      map.put(TransferHandler.getCopyAction().getValue(Action.NAME),
-              TransferHandler.getCopyAction());
-      map.put(TransferHandler.getPasteAction().getValue(Action.NAME),
-              TransferHandler.getPasteAction());
-      
-      InputMap imap = this.getInputMap();
-      imap.put(KeyStroke.getKeyStroke("meta X"),
-          TransferHandler.getCutAction().getValue(Action.NAME));
-      imap.put(KeyStroke.getKeyStroke("meta C"),
-          TransferHandler.getCopyAction().getValue(Action.NAME));
-      imap.put(KeyStroke.getKeyStroke("meta V"),
-          TransferHandler.getPasteAction().getValue(Action.NAME));
+//      ActionMap map = getActionMap();
+//      map.put(TransferHandler.getCutAction().getValue(Action.NAME),
+//              TransferHandler.getCutAction());
+//      map.put(TransferHandler.getCopyAction().getValue(Action.NAME),
+//              TransferHandler.getCopyAction());
+//      map.put(TransferHandler.getPasteAction().getValue(Action.NAME),
+//              TransferHandler.getPasteAction());
+//      
+//      InputMap imap = this.getInputMap();
+//      imap.put(KeyStroke.getKeyStroke("meta X"),
+//          TransferHandler.getCutAction().getValue(Action.NAME));
+//      imap.put(KeyStroke.getKeyStroke("meta C"),
+//          TransferHandler.getCopyAction().getValue(Action.NAME));
+//      imap.put(KeyStroke.getKeyStroke("meta V"),
+//          TransferHandler.getPasteAction().getValue(Action.NAME));
 
 //      
 //      
@@ -351,7 +407,10 @@ class SpriteView extends JPanel implements PropertyChangeListener {
    
    protected void updateBounds(){
       setLocation(_sprite.getX(), _sprite.getY());
-      setSize(_sprite.getWidth(), _sprite.getHeight());
+      
+      Dimension minSize = getMinimumSize();
+      setSize(Math.max(minSize.width, _sprite.getWidth()),
+            Math.max(minSize.height, _sprite.getHeight()));
    }
    
    public void paint(Graphics g){
