@@ -10,7 +10,7 @@ interface Relationship {
    Sprite getDependent();
    void setParent(Sprite parent);
    void setDependent(Sprite dependent);   
-   void update();
+   void update(Sprite source);
 }
 
 class DefaultRelationship implements Relationship, PropertyChangeListener {
@@ -25,16 +25,15 @@ class DefaultRelationship implements Relationship, PropertyChangeListener {
    
    @Override
    public void setParent(Sprite parent) {
+      if (this.parent != null){
+         this.parent.removePropertyChangeListener(this);
+      }
+      if (parent != null)      
+         parent.addPropertyChangeListener(this);      
       this.parent = parent;
    }
    @Override
    public Sprite getParent() {
-      if (this.parent != null){
-         this.parent.removePropertyChangeListener(this);
-      }
-
-      if (parent != null)      
-         parent.addPropertyChangeListener(this);      
       return parent;
    }
    @Override
@@ -46,13 +45,47 @@ class DefaultRelationship implements Relationship, PropertyChangeListener {
       return dependent;
    }
    @Override
-   public void update(){      
+   public void update(Sprite source){      
    }
    
    @Override
    public void propertyChange(PropertyChangeEvent e) {
-      update();
+      update((Sprite)e.getSource());
    }
+   
+}
+
+
+class OffsetRelationship extends DefaultRelationship{
+   int offsetX;
+   int offsetY;
+   
+   OffsetRelationship(Sprite parent, Sprite dependent){
+      super(parent, dependent);
+      offsetX = dependent.getX() - parent.getX();
+      offsetY = dependent.getY() - parent.getY();  
+   }
+   
+   @Override
+   public void setDependent(Sprite dependent) {
+      if (getDependent() != null)
+         getDependent().removePropertyChangeListener(this);
+      if (dependent != null)
+         dependent.addPropertyChangeListener(this);
+      super.setDependent(dependent);
+   }
+
+   
+   @Override
+   public void update(Sprite source){
+      if (source == getParent()){
+         getDependent().setX(getParent().getX() + offsetX);
+         getDependent().setY(getParent().getY() + offsetY);
+      }else{
+         offsetX = getDependent().getX() - getParent().getX();
+         offsetY = getDependent().getY() - getParent().getY();      
+      }
+   }      
    
 }
 
@@ -61,7 +94,7 @@ class SideRelationship extends DefaultRelationship{
    public SideRelationship(Sprite p, Sprite d, Side side) {
       super(p,d);
       this.side = side;
-      update();
+      update(p);
    }
 
    public enum Side{
@@ -74,8 +107,8 @@ class SideRelationship extends DefaultRelationship{
    };
    
    @Override
-   public void update(){
-      super.update();
+   public void update(Sprite source){
+      super.update(source);
             
       Rectangle r = new Rectangle(getParent().getX(), getParent().getY(), getParent().getWidth(), getParent().getHeight());
       Dimension d = new Dimension(getDependent().getWidth(), getDependent().getHeight());

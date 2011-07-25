@@ -27,12 +27,17 @@ class StepThumbView extends JPanel {
       removeAll();
       
       for (Sprite sprite : _step.getSprites()){       
-         SpriteView view = ViewFactory.createView(sprite);
-         add(view); 
+         
+         if (sprite instanceof ContextImage){
+            ContextImageView view = ViewFactory.createView(_step.getContextImage());
+            add(view);
+         }else{
+            SpriteView view = ViewFactory.createView(sprite);            
+            add(view,0);
+         }
       }      
       
-      ContextImageView view = ViewFactory.createView(_step.getContextImage());
-      add(view);
+//      add(view);
    }
    
    
@@ -90,24 +95,42 @@ public class StepView extends SlideEditView {
    
    JPanel contentLayer = new JPanel();
    
-   private void updateStep(){            
+   protected void updateStep(){            
       contentLayer.removeAll();
       
       if (_step == null)
          return;
       
       
-      //System.out.println("StepView:updateStep: adding " + _step.getSprites().size() + " steps");
       for (Sprite sprite : _step.getSprites()){       
-         SpriteView view = ViewFactory.createView(sprite);
-        // System.out.println(sprite.getClass() + " : " + sprite);         
-         contentLayer.add(view,0); 
-      }      
+         
+         if (sprite instanceof ContextImage){
+            ContextImage contextImage = (ContextImage) sprite;
+            ContextImageView view = ViewFactory.createView(_step.getContextImage());
+            view.setLocation(contextImage.getX(),contextImage.getY());
+            contentLayer.add(view);
+         }else{
+            SpriteView view = ViewFactory.createView(sprite);            
+            contentLayer.add(view,0);
+         }
+      }   
       
-      ContextImage contextImage = _step.getContextImage();
-      ContextImageView view = ViewFactory.createView(_step.getContextImage());
-      view.setLocation(contextImage.getX(),contextImage.getY());
-      contentLayer.add(view);
+      for (Relationship relationship : _step.getRelationships()){
+         relationship.update(null);
+      }
+
+      
+//      //System.out.println("StepView:updateStep: adding " + _step.getSprites().size() + " steps");
+//      for (Sprite sprite : _step.getSprites()){       
+//         SpriteView view = ViewFactory.createView(sprite);
+//        // System.out.println(sprite.getClass() + " : " + sprite);         
+//         contentLayer.add(view,0); 
+//      }      
+      
+//      ContextImage contextImage = _step.getContextImage();
+//      ContextImageView view = ViewFactory.createView(_step.getContextImage());
+//      view.setLocation(contextImage.getX(),contextImage.getY());
+//      contentLayer.add(view);
       repaint(); 
    }
    

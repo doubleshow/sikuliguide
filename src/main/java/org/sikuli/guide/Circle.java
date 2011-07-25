@@ -12,6 +12,10 @@ class Circle extends DefaultSprite{
 
    public Circle(int x, int y, int width, int height) {
       super(x,y,width,height);
+   }
+
+   public Circle() {
+//      super(0,0,20,20);
    }  
 }
 

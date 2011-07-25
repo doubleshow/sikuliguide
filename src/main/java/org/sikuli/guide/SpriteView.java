@@ -121,7 +121,7 @@ class SerialClone {
 class SpriteTransferHandler extends TransferHandler{
       
    DataFlavor serialSpriteFlavor = new DataFlavor(Sprite.class, "Sprite");
-   DataFlavor serialArrayListFlavor = new DataFlavor(ArrayList.class, "ArrayList");
+   DataFlavor serialArrayListFlavor = new DataFlavor(SpriteArrayList.class, "SpriteArrayList");
    
    //Sprite spriteBeingTransferred;
    static Point insertOffset = new Point();
@@ -270,6 +270,10 @@ class SpriteTransferHandler extends TransferHandler{
 
    public int getSourceActions(JComponent c) {
       return COPY_OR_MOVE;
+   }
+   
+   public class SpriteArrayList extends ArrayList<Sprite>{
+      
    }
 
    public class ArrayListTransferable<T> implements Transferable {

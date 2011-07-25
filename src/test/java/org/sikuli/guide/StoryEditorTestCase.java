@@ -69,7 +69,8 @@ public class StoryEditorTestCase {
 
 
 
-         slide0 = FixtureFactory.createStep();         
+//         slide0 = FixtureFactory.createStep();
+         slide0 = FixtureFactory.createStepWithRelationships();
          slide0.setName("Step 0");
          slide1 = FixtureFactory.createStep1();
          slide1.setName("Step 1");
@@ -144,6 +145,7 @@ public class StoryEditorTestCase {
 
 //         editor.getEditActionFactory().addNewSlideToEndAction(slide1).actionPerformed(null);
 
+         
 
          Object lock = new Object();
          synchronized(lock){

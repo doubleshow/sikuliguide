@@ -14,7 +14,7 @@ public class RelationshipTestCase {
       Sprite d = new DefaultSprite(0,0,80,100);
       
       Relationship r = new SideRelationship(p,d, SideRelationship.Side.ABOVE);       
-      r.update();
+      r.update(p);
             
       assertThat(d.getY(), equalTo(p.getY()-d.getHeight()));
       assertThat(d.getX(), equalTo(p.getX()+10));      

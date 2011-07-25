@@ -63,20 +63,20 @@ public class StepTestCase {
    
    @Test
    public void testRemoveRelationshipsForASprite_parent(){
-      step.removeRelationship(parent);
+      step.removeRelationships(parent);
       assertThat(step.getRelationships().size(), equalTo(0));
    }
    
    @Test
    public void testRemoveRelationshipsForASprite_dependent1(){
-      step.removeRelationship(dependent1);
+      step.removeRelationships(dependent1);
       assertThat(step.getRelationships(), not(hasItem(existingRelationship1)));
       assertThat(step.getRelationships(), hasItem(existingRelationship2));
    }
 
    @Test
    public void testRemoveRelationshipsForASprite_dependent2(){
-      step.removeRelationship(dependent2);
+      step.removeRelationships(dependent2);
       assertThat(step.getRelationships(), not(hasItem(existingRelationship2)));
       assertThat(step.getRelationships(), hasItem(existingRelationship1));
    }   
@@ -84,7 +84,7 @@ public class StepTestCase {
    @Test
    public void testRemoveRelationshipsForASprite_nontExistingSprite(){
       Sprite s = mock(Sprite.class);
-      step.removeRelationship(s);
+      step.removeRelationships(s);
       assertThat(step.getRelationships(), hasItems(existingRelationship1,existingRelationship2));
    }   
    

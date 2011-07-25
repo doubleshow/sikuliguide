@@ -40,6 +40,8 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
    
    public void setContextImage(ContextImage contextImage){
       _contextImage = contextImage;
+      _spriteList.removeElement(_contextImage);
+      _spriteList.addElement(_contextImage);
    }
    
    public List<Sprite> getSprites(){
@@ -69,7 +71,8 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
    }
    
    public void removeSprite(Sprite sprite){
-      _spriteList.removeElement(sprite);      
+      _spriteList.removeElement(sprite);    
+      removeRelationships(sprite);
       sprite.removePropertyChangeListener(this);            
       fireStateChanged();
       //fireDataContentsChanged();
@@ -78,6 +81,7 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
    public void removeSprite(final int index){
       final Sprite spriteRemoved = (Sprite) _spriteList.getElementAt(index);
       _spriteList.removeElement(index);      
+      removeRelationships(spriteRemoved);
       spriteRemoved.removePropertyChangeListener(this);            
       fireStateChanged();
       //fireDataContentsChanged();
@@ -99,7 +103,10 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
    }
    
    private List<Relationship> relationships = new ArrayList<Relationship>();
-   public void addRelationship(Relationship rel) {
+   public void addRelationship(Relationship rel) {      
+      // do not allow self-referencing relationship
+      if (rel.getParent() == rel.getDependent())
+         return;      
       relationships.add(rel);
    }
 
@@ -107,18 +114,27 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
       return relationships;
    }
    
-   public void removeRelationship(Relationship rel) {
-      relationships.remove(rel);      
-   }
-   
-   public void removeRelationship(Sprite s) {
+   public List<Relationship> getRelationships(Sprite sprite) {
       List<Relationship> newList = new ArrayList<Relationship>();
       for (Relationship rel : relationships){         
-         if (rel.getParent() != s && rel.getDependent() != s){
+         if (rel.getParent() == sprite || rel.getDependent() == sprite){
             newList.add(rel);
          }
       }
-      relationships = newList;
+      return newList;
+   }
+   
+   public void removeRelationship(Relationship rel) {
+      rel.setParent(null); // TODO: this is a hack to remove property listeners to parent
+      rel.setDependent(null);
+      relationships.remove(rel);     
+   }
+   
+   public void removeRelationships(Sprite s) {
+      List<Relationship> toRemove = getRelationships(s);
+      for (Relationship r : toRemove){
+         removeRelationship(r);
+      }
    }
 
 }

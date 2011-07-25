@@ -94,6 +94,26 @@ class FixtureFactory {
       return step;
    }
    
+   static Step createStepWithRelationships(){
+      Step step = new Step();            
+      
+      final Circle circle = FixtureFactory.createCircle();
+      final FlagText flag = FixtureFactory.createFlagText();
+      final Target target = FixtureFactory.createTarget();
+      final Text text = FixtureFactory.createText();
+      
+      step.addSprite(circle);
+      step.addSprite(flag);
+      step.addSprite(target);      
+      step.addSprite(text);      
+      step.addRelationship(new SideRelationship(target,circle,Side.SURROUND));
+      step.addRelationship(new SideRelationship(target,flag,Side.LEFT));
+      step.addRelationship(new OffsetRelationship(target,text));
+      
+      step.setContextImage(createContextImage());
+      return step;
+   }
+   
    static Step createStep(){
       Step step = new Step();            
       
@@ -123,10 +143,10 @@ class FixtureFactory {
    
    public static Target createTarget() {
       Target target = new DefaultTarget();
-      target.setX(265);
-      target.setX(90);
-      target.setX(50);
-      target.setX(30);
+      target.setX(150);
+      target.setY(240);
+      target.setWidth(50);
+      target.setHeight(50);
       return target;
    }
 
