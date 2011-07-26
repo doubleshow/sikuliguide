@@ -354,49 +354,7 @@ class SpriteView extends JPanel implements PropertyChangeListener {
       //setFocusable(true);
       //setDragEnabled(true);
       
-      
-      
-      setTransferHandler(new SpriteTransferHandler());
-      
-//      ActionMap map = getActionMap();
-//      map.put(TransferHandler.getCutAction().getValue(Action.NAME),
-//              TransferHandler.getCutAction());
-//      map.put(TransferHandler.getCopyAction().getValue(Action.NAME),
-//              TransferHandler.getCopyAction());
-//      map.put(TransferHandler.getPasteAction().getValue(Action.NAME),
-//              TransferHandler.getPasteAction());
-//      
-//      InputMap imap = this.getInputMap();
-//      imap.put(KeyStroke.getKeyStroke("meta X"),
-//          TransferHandler.getCutAction().getValue(Action.NAME));
-//      imap.put(KeyStroke.getKeyStroke("meta C"),
-//          TransferHandler.getCopyAction().getValue(Action.NAME));
-//      imap.put(KeyStroke.getKeyStroke("meta V"),
-//          TransferHandler.getPasteAction().getValue(Action.NAME));
-
-//      
-//      
-//      addKeyListener(new KeyAdapter(){
-//
-//         @Override
-//         public void keyPressed(KeyEvent k){
-//            System.out.println("here too");
-//
-////            if (k.getKeyCode() == KeyEvent.VK_C){
-////               TransferHandler.getCutAction().actionPerformed(new ActionEvent(SpriteView.this,1,""));
-////
-////            } else if (k.getKeyCode() == KeyEvent.VK_V){
-////               TransferHandler.getPasteAction().actionPerformed(new ActionEvent(SpriteView.this,1,""));
-////               
-//////               TransferHandler handler = getTransferHandler();                
-//////               handler.
-////               
-////            }
-//         }
-//         
-//         
-//      });
-      
+//      setTransferHandler(new SpriteTransferHandler());
    }
 
    // Update the view based on the current attributes of the associated model

@@ -44,6 +44,16 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
       _spriteList.addElement(_contextImage);
    }
    
+   public List<Target> getTargets(){
+      List<Target> aList = new ArrayList<Target>();
+      for (int i = 0; i < _spriteList.getSize(); ++i){
+         if (_spriteList.getElementAt(i) instanceof Target){         
+            aList.add((Target) _spriteList.getElementAt(i));
+         }
+      }
+      return aList;
+   }
+   
    public List<Sprite> getSprites(){
       List<Sprite> aList = new ArrayList<Sprite>();
       for (int i = 0; i < _spriteList.getSize(); ++i){

@@ -55,7 +55,17 @@ class ContextTarget extends DefaultTarget {
    
    ContextTarget(ContextImage contextImage){
       this.contextImage = contextImage;
+   }
+      
+   // create a context target with the same spatial properties of the source target
+   ContextTarget(ContextImage contextImage, Target source){
+      setX(source.getX());
+      setY(source.getY());
+      setWidth(source.getWidth());
+      setHeight(source.getHeight());
+      this.contextImage = contextImage;
    }   
+
    
    BufferedImage crop(BufferedImage src, Rectangle rect){
       BufferedImage dest = new BufferedImage((int)rect.getWidth(), (int)rect.getHeight(), BufferedImage.TYPE_INT_RGB);
@@ -68,7 +78,12 @@ class ContextTarget extends DefaultTarget {
    @Override
    public BufferedImage getBufferedImage(){
       if (image == null){
-         Rectangle area = getBounds();     
+         
+         // compute the area within the context image occupied by the target
+         Rectangle area = getBounds(); // target's bounds relative to Canvas           
+         area.x -= contextImage.getX();   // translate to context image's coordinate system
+         area.y -= contextImage.getY();
+         
          image = crop(contextImage.getBufferedImage(), area);
       }
       return image;

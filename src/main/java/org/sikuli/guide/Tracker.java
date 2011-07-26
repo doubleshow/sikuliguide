@@ -218,7 +218,7 @@ interface ScreenGrabber {
 public class Tracker extends Thread {
 
 //   Pattern _pattern;
-   FindResult _match;
+   FindResult _lastMatch;
 //   Region _screen;
 //   Pattern _centerPattern;
    
@@ -268,7 +268,30 @@ public class Tracker extends Thread {
       
       return finder.findFirstGoodMatch(regionImage, targetImage);
    }
+   
+   FindResult findCenterOfTargetInRegion(Rectangle region){
+      BufferedImage inputImage = _screenGrabber.grab();
+      BufferedImage regionImage = crop(inputImage, region);
+      BufferedImage targetImage;
+      
+      // sample a d by d region in the center of the pattern
+      int d = 10;
+      if (d < _lastMatch.width && d < _lastMatch.height){
 
+         Rectangle area = new Rectangle(_lastMatch);
+         area.x = _lastMatch.width/2 - d/2;
+         area.y = _lastMatch.height/2 - d/2;
+         area.width = d;
+         area.height = d;
+
+         targetImage  = crop(_target.getBufferedImage(), area);
+      }else{
+         
+         targetImage = _target.getBufferedImage();
+      }
+      
+      return finder.findFirstGoodMatch(regionImage, targetImage);
+   }
    
    public Tracker(Target target){
       _target = target;
@@ -293,32 +316,17 @@ public class Tracker extends Thread {
    public void addTrackerListener(TrackerListener listener){
       _listeners.add(listener);
    }
+     
    
    boolean isPatternStillThereInTheSameLocation(){
-
       try {
          sleep(1000);
       } catch (InterruptedException e) {
-      }
-
-      //Rectangle center = new Rectangle(_match);
-      //center.grow(h, v)
-//      center.x += center.w/4-2;
-//      center.y += center.h/4-2;
-//      center.w = center.w/2+4;
-//      center.h = center.h/2+4;
-
-      //FindResult m = center.exists(_centerPattern,0);
-      //FindResult m = findTarget();//.exists(_centerPattern,0);
+      }      
       
-      FindResult m = findTargetInRegion(_match);
-
-//      if (m == null)
-//         System.out.println("[Tracker] Pattern is not seen in the same location.");
-//      
-      return m != null;
-      
-      // Debug.log("[Tracker] Pattern is still in the same location" + m);
+      FindResult m = findCenterOfTargetInRegion(_lastMatch);
+//    TODO: verify the center is till at the center of the target
+      return m != null;      
    }
 
 
@@ -327,25 +335,22 @@ public class Tracker extends Thread {
       running = true;
 
       // Looking for the target for the first time
-      //System.out.println("[Tracker] Looking for the target for the first time");
+      //System.out.println("[Tracker] started");
       
-      _match = null;
-      while (running && (_match == null)){      
-         _match = findTarget();//doesPatternExist
-         //_match = getRegion().exists(_pattern,0.5);         
+      _lastMatch = null;
+      while (running && (_lastMatch == null)){      
+         _lastMatch = findTarget();         
       }
-
+      
       // this means the tracker has been stopped before the pattern is found
-      if (_match == null)
+      if (_lastMatch == null)
          return;
       
-      //Debug.log("[Tracker] Pattern is found for the first time");
-      notifyTargetFoundFirstTime(_match);
+      notifyTargetFoundFirstTime(_lastMatch);
                
       while (running){
 
-         if (_match != null && isPatternStillThereInTheSameLocation()){
-            //Debug.log("[Tracker] Pattern is seen in the same location.");
+         if (_lastMatch != null && isPatternStillThereInTheSameLocation()){
             continue;
          }
 
@@ -359,18 +364,15 @@ public class Tracker extends Thread {
          // the pattern has disappeared and the referencing annotations should
          // be hidden
          FindResult newMatch = findTarget();
-         if (newMatch == null){
-           // Debug.log("[Tracker] Pattern is not found on the screen");
-            
-            if (_match != null){
-               notifyTargetNotFound();
-            }
-         }else {
-           // Debug.log("[Tracker] Pattern is found in a new location: " + newMatch);
+         if (newMatch == null && _lastMatch != null){
+            notifyTargetNotFound();
+         }
+
+         if (newMatch != null && _lastMatch == null){
             notifyTargetFoundAgain(newMatch);
          }
 
-         _match = newMatch;
+         _lastMatch = newMatch;
       } 
    }
 
@@ -378,6 +380,7 @@ public class Tracker extends Thread {
       for (TrackerListener listener : _listeners){
          listener.targetFoundFirstTime(_target,match);
       }
+      System.out.println("Target found first time!");
       _target.setX(match.x);
       _target.setY(match.y);
       _target.setWidth(match.width);
@@ -389,7 +392,7 @@ public class Tracker extends Thread {
       for (TrackerListener listener : _listeners){
          listener.targetNotFound(_target);
       }
-      
+      System.out.println("Target not found");
       _target.setFound(false);
    }
    

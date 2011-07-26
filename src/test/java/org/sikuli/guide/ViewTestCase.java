@@ -102,15 +102,19 @@ class FixtureFactory {
       final Target target = FixtureFactory.createTarget();
       final Text text = FixtureFactory.createText();
       
+      
+      ContextImage image = createContextImage();
+      ContextTarget contextTarget = new ContextTarget(image, target);
+      
       step.addSprite(circle);
       step.addSprite(flag);
-      step.addSprite(target);      
+      step.addSprite(contextTarget);      
       step.addSprite(text);      
-      step.addRelationship(new SideRelationship(target,circle,Side.SURROUND));
-      step.addRelationship(new SideRelationship(target,flag,Side.LEFT));
-      step.addRelationship(new OffsetRelationship(target,text));
+      step.addRelationship(new SideRelationship(contextTarget,circle,Side.SURROUND));
+      step.addRelationship(new SideRelationship(contextTarget,flag,Side.LEFT));
+      step.addRelationship(new OffsetRelationship(contextTarget,text));
       
-      step.setContextImage(createContextImage());
+      step.setContextImage(image);
       return step;
    }
    
