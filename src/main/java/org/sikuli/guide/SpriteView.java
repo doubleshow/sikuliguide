@@ -8,6 +8,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
+import java.awt.Transparency;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -341,9 +342,9 @@ class SpriteView extends JPanel implements PropertyChangeListener {
       
    protected Sprite _sprite;
       
-//   StepView getStep(){
-//      return SwingUtilities.getAncestorOfClass(StepView.class, this);
-//   }
+   private float opacity = 1.0f;
+   
+
    
    public SpriteView(Sprite sprite){
       _sprite = sprite;
@@ -351,6 +352,9 @@ class SpriteView extends JPanel implements PropertyChangeListener {
       updateBounds();
       updateStyle();
       updateName();
+      
+      setOpaque(false); // need this to get fading out work right for all views
+      
       //setFocusable(true);
       //setDragEnabled(true);
       
@@ -374,17 +378,23 @@ class SpriteView extends JPanel implements PropertyChangeListener {
       setSize(Math.max(minSize.width, _sprite.getWidth()),
             Math.max(minSize.height, _sprite.getHeight()));
    }
+
    
+   //BufferedImage spriteImage; <-- don't do this because this blows up the heap   
    public void paint(Graphics g){
       
-      // render the component in an offscreen buffer with shadow
-      BufferedImage image = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
-      Graphics2D g2 = image.createGraphics();      
+      // render the component in an offscreen buffer (TODO: with shadow)
+      
+      BufferedImage spriteImage = getGraphicsConfiguration().createCompatibleImage(getWidth(), getHeight(), Transparency.TRANSLUCENT);      
+      Graphics2D g2 = spriteImage.createGraphics();     
+      g2.setRenderingHints(((Graphics2D) g).getRenderingHints());
+      g2.setClip(g.getClip());
       super.paint(g2);
       
+      // so that we can paste it with translucent effects
       Graphics2D g2d = (Graphics2D) g;      
-//      ((Graphics2D) g).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,_sprite.getOpacity()));
-      g2d.drawImage(image,0,0,null,null);
+      g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,getOpacity()));
+      g2d.drawImage(spriteImage,0,0,null,null);
 
 
 //      if (_model.isSelected()){
@@ -431,6 +441,14 @@ class SpriteView extends JPanel implements PropertyChangeListener {
 
    public Sprite getSprite() {
       return _sprite;
+   }
+
+   public void setOpacity(float opacity) {
+      this.opacity = opacity;
+   }
+
+   public float getOpacity() {
+      return opacity;
    }
 }
 

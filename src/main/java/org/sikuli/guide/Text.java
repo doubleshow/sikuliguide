@@ -82,6 +82,7 @@ class TextView extends SpriteView {
       super(model);   
       _textSprite = model;
       updateText();
+      setOpaque(false);
    }
    
    @Override

@@ -10,15 +10,23 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.JPanel;
 import javax.swing.JWindow;
 import javax.swing.Timer;
 
+import org.jdesktop.core.animation.timing.Animator;
+import org.jdesktop.core.animation.timing.AnimatorBuilder;
+import org.jdesktop.core.animation.timing.PropertySetter;
+import org.jdesktop.core.animation.timing.TimingTarget;
+import org.jdesktop.core.animation.timing.TimingTargetAdapter;
+import org.jdesktop.core.animation.timing.interpolators.AccelerationInterpolator;
+import org.jdesktop.swing.animation.timing.sources.SwingTimerTimingSource;
 import org.sikuli.cv.FindResult;
 
 import com.sun.awt.AWTUtilities;
@@ -29,6 +37,46 @@ interface StepPlayerListener {
    void stepFailed(Step step);
 }
 
+
+class SpriteAnimator {
+   static Animator moveTo(Sprite sprite, Point p){
+      Animator anim;
+      anim = new AnimatorBuilder().setDuration(1, TimeUnit.SECONDS).build();
+      anim.addTarget(PropertySetter
+            .getTargetTo(sprite, "x", new AccelerationInterpolator(0.5, 0.5), p.x));
+      anim.addTarget(PropertySetter
+            .getTargetTo(sprite, "y", new AccelerationInterpolator(0.5, 0.5), p.y));
+      anim.start();
+      return anim;
+   }
+}
+
+class SpriteGroupViewAnimator {   
+   
+   private static final SwingTimerTimingSource f_animationTimer = new SwingTimerTimingSource();
+   static {
+      AnimatorBuilder.setDefaultTimingSource(f_animationTimer);
+      f_animationTimer.init();
+   }
+   
+   static Animator fadeIn(SpriteViewGroup g){
+      Animator anim;
+      anim = new AnimatorBuilder().setDuration(1, TimeUnit.SECONDS).build();
+      anim.addTarget(PropertySetter
+            .getTargetTo(g, "opacity", new AccelerationInterpolator(0.5, 0.5), 1.0f));
+      anim.start();
+      return anim;
+   }
+   
+   static Animator fadeOut(SpriteViewGroup g){
+      Animator anim;
+      anim = new AnimatorBuilder().setDuration(1, TimeUnit.SECONDS).build();
+      anim.addTarget(PropertySetter
+            .getTargetTo(g, "opacity", new AccelerationInterpolator(0.5, 0.5), 0.0f));
+      anim.start();
+      return anim;
+   }   
+}
 
 public class StoryPlayer extends JWindow {
    
@@ -141,6 +189,22 @@ public class StoryPlayer extends JWindow {
          }
       }
       
+      private SpriteView getView(Sprite sprite){
+         return spriteToSpriteView.get(sprite);
+      }
+      
+      private List<SpriteView> getDependentViews(Sprite sprite){
+         List<SpriteView> views = new ArrayList<SpriteView>();
+         for (Relationship rel : step.getRelationships()){
+            if (sprite == rel.getParent()){
+               Sprite dependent = rel.getDependent();
+               SpriteView dependentView = spriteToSpriteView.get(dependent);
+               views.add(dependentView);
+            }
+         }
+         return views;
+      }
+      
       private void setVisible(Sprite sprite, boolean visible){
          setVisible(sprite, visible, false);
       }
@@ -150,30 +214,56 @@ public class StoryPlayer extends JWindow {
          if (includingDependents)
             setDependentsVisible(sprite, visible);
       }
+      
+      private SpriteViewGroup getSpriteViewGroupForDependents(Sprite parent){
+         SpriteViewGroup g = new SpriteViewGroup();         
+         //g.views.add(viewHelper.getView(parent));
+         g.views.addAll(viewHelper.getDependentViews(parent)); 
+         return g;
+      }
    
    }
    ViewHelper viewHelper = new ViewHelper();
    
-   class TrackerListenerImpl implements TrackerListener { 
+   private static final SwingTimerTimingSource f_animationTimer = new SwingTimerTimingSource();
+   static {
+      AnimatorBuilder.setDefaultTimingSource(f_animationTimer);
+      f_animationTimer.init();
+   }
 
+   // an instance per target
+   class SingleTargetTrackerListener implements TrackerListener { 
+
+      SpriteViewGroup group = null;
+      SingleTargetTrackerListener(Target target){
+         group = viewHelper.getSpriteViewGroupForDependents(target);
+      }
+      
       @Override
       public void targetFoundFirstTime(Target target, FindResult match) {
-         viewHelper.setDependentsVisible(target, true);         
+
+         target.setX(match.x);
+         target.setY(match.y);
+         
+         group.setOpacity(0f);
+         group.setVisible(true);         
+         SpriteGroupViewAnimator.fadeIn(group);
       }
 
       @Override
       public void targetFoundAgain(Target target, FindResult match) {
-         viewHelper.setDependentsVisible(target, true);                  
+         group.setVisible(true);
+         SpriteGroupViewAnimator.fadeIn(group);
+         SpriteAnimator.moveTo(target, match.getLocation());
       }
 
       @Override
       public void targetNotFound(Target target) {
-         viewHelper.setDependentsVisible(target, false);
+         SpriteGroupViewAnimator.fadeOut(group);
       }
       
    };
    
-//   ArrayList<SklTracker> _trackers = new ArrayList<SklTracker>(); 
    void play(Step step){
       
 //      _screenRegionSelector.setVisible(true);
@@ -194,13 +284,13 @@ public class StoryPlayer extends JWindow {
       for (Target target : step.getTargets()){ 
          
          // hide all dependents initially         
-         viewHelper.setVisible(target, false, true);         
+         viewHelper.setVisible(target, false, true);
 
          // set the tracker
          Tracker tracker = new Tracker(target);
          tracker.setScreenGrabber(_screenGrabber);
          tracker.start();         
-         tracker.addTrackerListener(new TrackerListenerImpl());
+         tracker.addTrackerListener(new SingleTargetTrackerListener(target));
          
       }
       

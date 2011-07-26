@@ -9,9 +9,15 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.Timer;
 
+import org.jdesktop.core.animation.timing.Animator;
+import org.jdesktop.core.animation.timing.AnimatorBuilder;
+import org.jdesktop.core.animation.timing.PropertySetter;
+import org.jdesktop.core.animation.timing.interpolators.AccelerationInterpolator;
+import org.jdesktop.swing.animation.timing.sources.SwingTimerTimingSource;
 import org.sikuli.cv.FindResult;
 import org.sikuli.cv.TemplateFinder;
 
@@ -354,7 +360,6 @@ public class Tracker extends Thread {
             continue;
          }
 
-
          // try for at least 1.0 sec. to have a better chance of finding the
          // new position of the pattern.
          // the first attempt often fails because the target is only a few
@@ -368,7 +373,7 @@ public class Tracker extends Thread {
             notifyTargetNotFound();
          }
 
-         if (newMatch != null && _lastMatch == null){
+         if (newMatch != null){
             notifyTargetFoundAgain(newMatch);
          }
 
@@ -381,30 +386,43 @@ public class Tracker extends Thread {
          listener.targetFoundFirstTime(_target,match);
       }
       System.out.println("Target found first time!");
-      _target.setX(match.x);
-      _target.setY(match.y);
-      _target.setWidth(match.width);
-      _target.setHeight(match.height);
-      _target.setFound(true);
+      
+//      Animator anim;
+//      anim = new AnimatorBuilder().setDuration(1, TimeUnit.SECONDS).build();
+//      anim.addTarget(PropertySetter
+//            .getTargetTo(_target, "x", new AccelerationInterpolator(0.5, 0.5), match.x));
+//      anim.addTarget(PropertySetter
+//            .getTargetTo(_target, "y", new AccelerationInterpolator(0.5, 0.5), match.y));
+//      anim.start();
+//      
+//      _target.setX(match.x);
+//      _target.setY(match.y);
+//      _target.setWidth(match.width);
+//      _target.setHeight(match.height);
+//      _target.setFound(true);
    }
+   
+
    
    private void notifyTargetNotFound() {
       for (TrackerListener listener : _listeners){
          listener.targetNotFound(_target);
       }
       System.out.println("Target not found");
-      _target.setFound(false);
+//      _target.setFound(false);
    }
    
    private void notifyTargetFoundAgain(FindResult match) {
       for (TrackerListener listener : _listeners){
          listener.targetFoundAgain(_target,match);
       }
-      _target.setX(match.x);
-      _target.setY(match.y);
-      _target.setWidth(match.width);
-      _target.setHeight(match.height);
-      _target.setFound(true);
+      System.out.println("Target found again");
+
+//      _target.setX(match.x);
+//      _target.setY(match.y);
+//      _target.setWidth(match.width);
+//      _target.setHeight(match.height);
+//      _target.setFound(true);
    }
 
    public void stopTracking(){

@@ -112,6 +112,7 @@ class FixtureFactory {
       step.addSprite(text);      
       step.addRelationship(new SideRelationship(contextTarget,circle,Side.SURROUND));
       step.addRelationship(new SideRelationship(contextTarget,flag,Side.LEFT));
+//      step.addRelationship(new SideRelationship(contextTarget,text,Side.LEFT));
       step.addRelationship(new OffsetRelationship(contextTarget,text));
       
       step.setContextImage(image);
