@@ -17,22 +17,32 @@ import javax.swing.undo.CannotUndoException;
 
 import org.sikuli.ui.DefaultSlide;
 import org.sikuli.ui.Slide;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Order;
 import org.simpleframework.xml.Root;
 
 @Root
+@Order(elements = {"sprites", "relationships"})
 public class Step extends DefaultSlide implements PropertyChangeListener {
    
    public Step(){
       super();
    }
    
-   @ElementList
+   void removeAllSprites(){
+      //_spriteList = new DefaultListModel();
+      for (int i = _spriteList.getSize()-1; i >= 0; --i){         
+         removeSprite(i);         
+      }      
+   }   
+   
    DefaultListModel _spriteList = new DefaultListModel();
    
    int canvasWidth;
    int canvasHeight;   
    
+   @Element
    ContextImage _contextImage;
    public ContextImage getContextImage(){
       return _contextImage;
@@ -54,13 +64,7 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
       return aList;
    }
    
-   public List<Sprite> getSprites(){
-      List<Sprite> aList = new ArrayList<Sprite>();
-      for (int i = 0; i < _spriteList.getSize(); ++i){
-         aList.add((Sprite) _spriteList.getElementAt(i));
-      }
-      return aList;
-   }
+
    
    public void addSprite(Sprite sprite) {
       _spriteList.addElement(sprite);      
@@ -96,12 +100,12 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
       fireStateChanged();
       //fireDataContentsChanged();
       
-      undoableEditSupport.postEdit(new AbstractUndoableEdit(){
-         public void undo() throws CannotUndoException {
-            super.undo();
-            addSprite(index, spriteRemoved);
-         }
-      });      
+//      undoableEditSupport.postEdit(new AbstractUndoableEdit(){
+//         public void undo() throws CannotUndoException {
+//            super.undo();
+//            addSprite(index, spriteRemoved);
+//         }
+//      });      
 
    }
 
@@ -112,6 +116,7 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
       
    }
    
+   @ElementList
    private List<Relationship> relationships = new ArrayList<Relationship>();
    public void addRelationship(Relationship rel) {      
       // do not allow self-referencing relationship
@@ -145,6 +150,25 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
       for (Relationship r : toRemove){
          removeRelationship(r);
       }
+   }
+   
+   
+   
+   
+   @ElementList
+   void setSprites(List<Sprite> sprites){
+      removeAllSprites();
+      for (Sprite sprite : sprites){
+         addSprite(sprite);
+      }
+   }
+   @ElementList
+   public List<Sprite> getSprites(){
+      List<Sprite> aList = new ArrayList<Sprite>();
+      for (int i = 0; i < _spriteList.getSize(); ++i){
+         aList.add((Sprite) _spriteList.getElementAt(i));
+      }
+      return aList;
    }
 
 }

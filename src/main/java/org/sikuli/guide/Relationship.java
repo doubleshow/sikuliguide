@@ -5,6 +5,10 @@ import java.awt.Rectangle;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
+
 interface Relationship {   
    Sprite getParent();
    Sprite getDependent();
@@ -13,6 +17,7 @@ interface Relationship {
    void update(Sprite source);
 }
 
+@Root
 class DefaultRelationship implements Relationship, PropertyChangeListener {
    
    DefaultRelationship(Sprite parent, Sprite dependent){
@@ -20,7 +25,13 @@ class DefaultRelationship implements Relationship, PropertyChangeListener {
       setDependent(dependent);
    }
    
+   DefaultRelationship(){   
+   }
+   
+   @Element
    private Sprite parent;
+   
+   @Element
    private Sprite dependent;
    
    @Override
@@ -55,9 +66,16 @@ class DefaultRelationship implements Relationship, PropertyChangeListener {
    
 }
 
-
+@Root
 class OffsetRelationship extends DefaultRelationship{
+   
+   OffsetRelationship() {
+   }
+
+   
+   @Attribute
    int offsetX;
+   @Attribute
    int offsetY;
    
    OffsetRelationship(Sprite parent, Sprite dependent){
@@ -89,12 +107,19 @@ class OffsetRelationship extends DefaultRelationship{
    
 }
 
+@Root
 class SideRelationship extends DefaultRelationship{
+   
+   @Attribute
    Side side;
+   
    public SideRelationship(Sprite p, Sprite d, Side side) {
       super(p,d);
       this.side = side;
       update(p);
+   }
+   
+   SideRelationship() {
    }
 
    public enum Side{

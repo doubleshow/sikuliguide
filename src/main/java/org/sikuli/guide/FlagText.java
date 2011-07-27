@@ -1,7 +1,6 @@
 package org.sikuli.guide;
 
 import java.awt.Color;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -24,6 +23,9 @@ class FlagText extends DefaultPointingText {
    public FlagText(String text) {
       super(text);
       setBackground(Color.magenta);
+   }
+   
+   public FlagText(){      
    }
 }
 

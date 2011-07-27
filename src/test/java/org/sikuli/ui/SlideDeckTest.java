@@ -25,7 +25,7 @@ import org.junit.Test;
 public class SlideDeckTest  {
 
 
-   private SlideDeck slideDeck = new DefaultSlideDeck();
+   private Deck slideDeck = new DefaultSlideDeck();
    private UndoableEditListener listener = mock(UndoableEditListener.class);
    private ListDataListener listDataListener = mock(ListDataListener.class);
    

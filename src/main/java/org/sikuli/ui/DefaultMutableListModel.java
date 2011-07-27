@@ -40,16 +40,20 @@ class DefaultMutableListModel<T> extends AbstractListModel
       fireIntervalAdded(this,index,index);
    }
 
-   public int indexOf(T elem) {
-      return elements.indexOf(elem);
-   }
-
    @Override
    public void insertElementsAt(List<T> elems, int index) {
       elements.addAll(index,elems);
       fireIntervalAdded(this, index, index + elems.size() - 1);      
    }
 
-   
+   public int indexOf(T elem) {
+      return elements.indexOf(elem);
+   }
+
+   public void clear(){
+      int n = getSize();
+      elements.clear();
+      fireIntervalRemoved(this,0,n-1);
+   }
    
 }

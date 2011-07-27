@@ -23,19 +23,16 @@ class DefaultPointingText
    public DefaultPointingText(String text, int direction) {
       super(text);
       setDirection(direction);
-//      setBackground(Color.yellow);
    }
    
    public DefaultPointingText(String text) {
       super(text);
       setDirection(PointingText.DIRECTION_EAST);
-//    setBackground(Color.yellow);      
     }
-
-
+   
    public DefaultPointingText() {
       super();
-//    setBackground(Color.yellow);      
+      setDirection(PointingText.DIRECTION_EAST);      
     }
 
    @Element

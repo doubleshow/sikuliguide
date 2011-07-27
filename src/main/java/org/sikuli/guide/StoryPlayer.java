@@ -99,7 +99,7 @@ public class StoryPlayer extends JWindow {
       setBounds(0,0,800,600);
    }
    
-   StoryPlayer() throws AWTException{      
+   public StoryPlayer() throws AWTException{      
       
       initAppearance();
       

@@ -14,12 +14,12 @@ public class SlideDeckListView extends JList {
       setTransferHandler(new ArrayListTransferHandler<Slide>());
    }
    
-   void setSlideDeck(SlideDeck slideDeck){
+   void setSlideDeck(Deck slideDeck){
       setModel(slideDeck);
    }
    
-   SlideDeck getSlideDeck(){
-      return (SlideDeck) getModel();
+   Deck getSlideDeck(){
+      return (Deck) getModel();
    }   
 }
 

@@ -84,7 +84,7 @@ public class SlideDeckEditorTest {
       protected Slide slide1;
       protected Slide slide2;
       protected Slide newSlide;
-      protected SlideDeck slideDeck;
+      protected Deck<Slide> slideDeck;
       protected List<Slide> slides;
       protected ActionEvent mockedActionEvent;
 
@@ -131,7 +131,7 @@ public class SlideDeckEditorTest {
          slide1 = mock(Slide.class);
          slide2 = mock(Slide.class);
          newSlide = mock(Slide.class);
-         slideDeck = mock(SlideDeck.class);
+         slideDeck = mock(Deck.class);
          slides = new ArrayList<Slide>();
          mockedActionEvent = mock(ActionEvent.class);
 
@@ -142,7 +142,7 @@ public class SlideDeckEditorTest {
 
          slides.add(slide0);
          slides.add(slide1);
-         when(slideDeck.getSlides()).thenReturn(slides);
+         when(slideDeck.getElements()).thenReturn(slides);
 
          editor.setSlideDeck(slideDeck);         
       }
@@ -179,7 +179,7 @@ public class SlideDeckEditorTest {
       
       @Test
       public void testClickToSelectAndDeleteSlide(){
-         int n = slideDeck.getSlides().size();
+         int n = slideDeck.getElements().size();
 
          fListView.clickItem(0);
          fListView.pressAndReleaseKeys(KeyEvent.VK_DELETE);
@@ -436,7 +436,7 @@ public class SlideDeckEditorTest {
          fListView.releaseKey(KeyEvent.VK_META);        
          fListView.requireItemCount(n);
 
-         assertThat(slideDeck.getSlides().get(0), sameInstance(slide1));
+         assertThat((Slide)slideDeck.getElementAt(0), sameInstance(slide1));
 
          fListView.pressKey(KeyEvent.VK_META);
          fListView.pressAndReleaseKeys(KeyEvent.VK_V);

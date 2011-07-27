@@ -3,52 +3,25 @@ package org.sikuli.ui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DragGestureRecognizer;
-import java.awt.dnd.DragSource;
-import java.awt.dnd.DragSourceDragEvent;
-import java.awt.dnd.DragSourceDropEvent;
-import java.awt.dnd.DragSourceEvent;
-import java.awt.dnd.DragSourceListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.beans.PropertyChangeListener;
-import java.io.IOException;
-import java.util.ArrayList;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.DefaultListModel;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.TransferHandler;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.event.UndoableEditEvent;
-import javax.swing.event.UndoableEditListener;
-import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoManager;
-import javax.swing.undo.UndoableEdit;
-import javax.swing.undo.UndoableEditSupport;
 
 import net.miginfocom.swing.MigLayout;
-
-import org.sikuli.guide.Step;
-
-import quicktime.std.comp.Component;
-
 
 public class SlideDeckEditor extends JPanel {
 
@@ -113,7 +86,7 @@ public class SlideDeckEditor extends JPanel {
       }
    }
 
-   SlideDeckEditor(SlideDeck document){
+   SlideDeckEditor(Deck document){
       this();
       setSlideDeck(document);      
    }
@@ -122,6 +95,9 @@ public class SlideDeckEditor extends JPanel {
       return listView.getSelectedIndex();
    }
    
+   public Slide getSelected(){
+      return (Slide) listView.getSelectedValue();
+   }
    
    class SlideListener implements ChangeListener{
       @Override
@@ -140,7 +116,7 @@ public class SlideDeckEditor extends JPanel {
 
       @Override
       public void intervalAdded(final ListDataEvent e) {
-         SlideDeck slideDeck = (SlideDeck) e.getSource();            
+         Deck slideDeck = (Deck) e.getSource();            
          for (int i = e.getIndex0(); i <= e.getIndex1(); ++i){               
             Slide addedSlide = (Slide) slideDeck.getElementAt(i);
             addListenersToSlide(addedSlide);
@@ -161,7 +137,7 @@ public class SlideDeckEditor extends JPanel {
          //int index = getSelectedIndex();
          //System.out.println(String.format("list element removed notified from %d to %d", e.getIndex0(), e.getIndex1()));
 
-         SlideDeck slideDeck = (SlideDeck) e.getSource();            
+         Deck slideDeck = (Deck) e.getSource();            
          for (int i = e.getIndex0(); i <= e.getIndex1(); ++i){               
 //            Slide slide = (Slide) slideDeck.getElementAt(i);
 //            removeListenersFromSlide(slide);
@@ -215,22 +191,22 @@ public class SlideDeckEditor extends JPanel {
       slide.removeUndoableEditListener(undoManager);
    }
    
-   private void addListenersToSlideDeck(SlideDeck slideDeck){
+   private void addListenersToSlideDeck(Deck slideDeck){
       if (slideDeck == null) return;
       slideDeck.addUndoableEditListener(undoManager);
       slideDeck.addListDataListener(slideDeckListener);
       System.out.println("add undo");
    }
    
-   private void removeListenersFromSlideDeck(SlideDeck slideDeck){
+   private void removeListenersFromSlideDeck(Deck slideDeck){
       if (slideDeck == null) return;
       slideDeck.removeUndoableEditListener(undoManager);
       slideDeck.removeListDataListener(slideDeckListener);
    }
    
    
-   private SlideDeck slideDeck;
-   public void setSlideDeck(SlideDeck slideDeck) {
+   private Deck<Slide> slideDeck;
+   public void setSlideDeck(Deck<Slide> slideDeck) {
       
       removeListenersFromSlideDeck(this.slideDeck);
       addListenersToSlideDeck(slideDeck);
@@ -243,7 +219,7 @@ public class SlideDeckEditor extends JPanel {
 //      listView.setSlideDeck(slideDeck);
       
       // TODO: Dry this (cf AddNewSlideAction)
-      for (Slide slide : slideDeck.getSlides()){
+      for (Slide slide : slideDeck.getElements()){
          addListenersToSlide(slide);
 //         slide.addChangeListener(slideListener);
 //         slide.addUndoableEditListener(undoManager);         
@@ -251,7 +227,7 @@ public class SlideDeckEditor extends JPanel {
       
    }
 
-   public SlideDeck getSlideDeck() {
+   public Deck getSlideDeck() {
       return slideDeck;
    }
    

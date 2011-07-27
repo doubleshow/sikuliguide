@@ -2,16 +2,19 @@ package org.sikuli.guide;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeListener;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.UUID;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Root;
 
 interface ContextImage extends Sprite {   
    BufferedImage getBufferedImage();  
@@ -36,14 +39,62 @@ class ContextImageView extends SpriteView {
    
 }
 
-class DefaultContextImage extends DefaultSprite implements ContextImage, Serializable {
+@Root
+class DefaultContextImage extends DefaultSprite 
+   implements ContextImage, Serializable, Bundleable {
    
    transient BufferedImage image = null;   
    SerializableBufferedImage serializableImage;
+
+   @Attribute
+   private String imageId = "";
+
+//   @Attribute
+//   public String getImageId(){
+//      System.out.println(""+getX() +","+ getY());
+//      if (imageId == null){
+//         //imageId = UUID.randomUUID().toString();
+//      }
+//      return imageId;
+//   }
+//   @Attribute
+//   public void setImageId(String imageId){
+//      this.imageId = imageId;
+//   }
+   
+   String getImageFilename(){
+      //return "image-" + getImageId() + ".png";
+      return "image-" + imageId + ".png";
+   }
+   
+   
+//   @Override
+//   // TODO: implement the correct behavior
+   public boolean isDirty() {
+      return true;
+   }
+   
+   @Override
+   public void writeToBundle(File bundlePath) throws IOException{
+      File file = new File(bundlePath, getImageFilename());
+      
+      if (isDirty() && !file.exists())     
+         ImageIO.write(getBufferedImage(), "png", file);
+   }
+   
+   @Override
+   public void readFromBundle(File bundlePath) throws IOException{
+      File file = new File(bundlePath, getImageFilename());
+      System.out.println(file.getAbsolutePath());
+      image = ImageIO.read(file);
+   }
    
    DefaultContextImage(File file) throws IOException{      
       image = ImageIO.read(file);
       serializableImage = new SerializableBufferedImage(image);
+   }
+   
+   DefaultContextImage(){      
    }
    
    public int getWidth(){
@@ -59,6 +110,9 @@ class DefaultContextImage extends DefaultSprite implements ContextImage, Seriali
          image = serializableImage.getBufferedImage(); 
       return image;
    }
+
+
+
 
 }
 

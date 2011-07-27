@@ -33,7 +33,7 @@ import static org.hamcrest.Matchers.*;
 import org.sikuli.ui.DefaultSlide;
 import org.sikuli.ui.DefaultSlideDeck;
 import org.sikuli.ui.Slide;
-import org.sikuli.ui.SlideDeck;
+import org.sikuli.ui.Deck;
 import org.sikuli.ui.SlideDeckEditor;
 import org.sikuli.ui.SlideDeckListView;
 
@@ -45,7 +45,7 @@ public class StoryEditorTestCase {
       protected Slide slide1;
       protected Slide slide2;
       protected Slide newSlide;
-      protected SlideDeck slideDeck;
+      protected Deck slideDeck;
       protected List<Slide> slides;
       protected ActionEvent mockedActionEvent;
 

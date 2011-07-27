@@ -57,6 +57,9 @@ class ContextTarget extends DefaultTarget {
       this.contextImage = contextImage;
    }
       
+   ContextTarget(){      
+   }
+   
    // create a context target with the same spatial properties of the source target
    ContextTarget(ContextImage contextImage, Target source){
       setX(source.getX());
