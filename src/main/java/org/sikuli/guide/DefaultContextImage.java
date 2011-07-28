@@ -13,8 +13,10 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
+import org.sikuli.ui.Bundleable;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.core.Validate;
 
 interface ContextImage extends Sprite {   
    BufferedImage getBufferedImage();  
@@ -27,7 +29,11 @@ class ContextImageView extends SpriteView {
       setLayout(null);
       
       JLabel label = new JLabel();
-      BufferedImage b = contextImage.getBufferedImage();      
+      BufferedImage b = contextImage.getBufferedImage();
+      if (b == null){
+         return;
+      }
+      
       ImageIcon icon = new ImageIcon(b);
       label.setIcon(icon);
       label.setSize(new Dimension(b.getWidth(), b.getHeight()));
@@ -47,24 +53,24 @@ class DefaultContextImage extends DefaultSprite
    SerializableBufferedImage serializableImage;
 
    @Attribute
-   private String imageId = "";
+   String imageId = "";
 
-//   @Attribute
-//   public String getImageId(){
-//      System.out.println(""+getX() +","+ getY());
-//      if (imageId == null){
-//         //imageId = UUID.randomUUID().toString();
-//      }
-//      return imageId;
-//   }
-//   @Attribute
-//   public void setImageId(String imageId){
-//      this.imageId = imageId;
+   public String getImageId(){
+      return imageId;
+   }
+   public void setImageId(String imageId){
+      this.imageId = imageId;
+   }
+   
+//   @Validate
+//   void validate(){
+//      System.out.println("validing");
+//      if (imageId.isEmpty())
+//         imageId = UUID.randomUUID().toString();
 //   }
    
    String getImageFilename(){
-      //return "image-" + getImageId() + ".png";
-      return "image-" + imageId + ".png";
+      return "image-" + getImageId() + ".png";
    }
    
    
@@ -77,7 +83,6 @@ class DefaultContextImage extends DefaultSprite
    @Override
    public void writeToBundle(File bundlePath) throws IOException{
       File file = new File(bundlePath, getImageFilename());
-      
       if (isDirty() && !file.exists())     
          ImageIO.write(getBufferedImage(), "png", file);
    }
@@ -85,23 +90,32 @@ class DefaultContextImage extends DefaultSprite
    @Override
    public void readFromBundle(File bundlePath) throws IOException{
       File file = new File(bundlePath, getImageFilename());
+      System.out.println(this);
       System.out.println(file.getAbsolutePath());
       image = ImageIO.read(file);
+      serializableImage = new SerializableBufferedImage(image);
    }
    
    DefaultContextImage(File file) throws IOException{      
       image = ImageIO.read(file);
       serializableImage = new SerializableBufferedImage(image);
+      imageId = UUID.randomUUID().toString();
    }
    
    DefaultContextImage(){      
    }
    
    public int getWidth(){
-      return getBufferedImage().getWidth();
+      if (getBufferedImage() == null)
+         return super.getWidth();
+      else
+         return getBufferedImage().getWidth();
    }
    
    public int getHeight(){
+      if (getBufferedImage() == null)
+         return super.getHeight();
+      else      
       return getBufferedImage().getHeight();
    }
    
@@ -110,9 +124,6 @@ class DefaultContextImage extends DefaultSprite
          image = serializableImage.getBufferedImage(); 
       return image;
    }
-
-
-
 
 }
 

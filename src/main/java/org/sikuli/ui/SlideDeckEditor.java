@@ -205,25 +205,26 @@ public class SlideDeckEditor extends JPanel {
    }
    
    
-   private Deck<Slide> slideDeck;
-   public void setSlideDeck(Deck<Slide> slideDeck) {
+   private Deck<? extends Slide> slideDeck;
+   public void setSlideDeck(Deck<? extends Slide> slideDeck) {
       
-      removeListenersFromSlideDeck(this.slideDeck);
-      addListenersToSlideDeck(slideDeck);
+      if (this.slideDeck != null){
+         for (Slide slide : this.slideDeck.getElements()){
+            removeListenersFromSlide(slide);
+         }      
+         removeListenersFromSlideDeck(this.slideDeck);
+      }
       
       this.slideDeck = slideDeck;
+
+      addListenersToSlideDeck(slideDeck);
+      for (Slide slide : slideDeck.getElements()){
+         addListenersToSlide(slide);
+      }
+
       listView.setModel(slideDeck);
       listView.setSelectedIndex(0);//setSelectedSlideIndex(0);      
       
-      //listView.setPreferredSize(new Dimension(100,400));
-//      listView.setSlideDeck(slideDeck);
-      
-      // TODO: Dry this (cf AddNewSlideAction)
-      for (Slide slide : slideDeck.getElements()){
-         addListenersToSlide(slide);
-//         slide.addChangeListener(slideListener);
-//         slide.addUndoableEditListener(undoManager);         
-      }
       
    }
 

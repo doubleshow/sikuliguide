@@ -10,6 +10,9 @@ import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.KeyStroke;
 
+import org.sikuli.ui.BundleableDocument;
+import org.sikuli.ui.BundleableDocumentOwner;
+import org.sikuli.ui.Bundler;
 import org.sikuli.ui.SlideDeckEditor;
 
 class StoryEditorKit {
@@ -48,7 +51,9 @@ class StoryEditorKit {
 
 }
 
-public class StoryEditor extends SlideDeckEditor {
+
+// Save/Load contents to a bundle folder including xml and images
+public class StoryEditor extends SlideDeckEditor implements BundleableDocumentOwner {
 
 
    StoryEditor() {
@@ -70,12 +75,39 @@ public class StoryEditor extends SlideDeckEditor {
       }
    }
 
+   Bundler bps = new Bundler();
    private void initActionInputMap() {
       ActionMap map = getActionMap();
       InputMap imap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
       map.put(StoryEditorKit.playCurrentStepAction.getValue(Action.NAME), StoryEditorKit.playCurrentStepAction);
       imap.put(KeyStroke.getKeyStroke("meta R"), StoryEditorKit.playCurrentStepAction.getValue(Action.NAME));
+            
+      map.put(bps.getLoadAction().getValue(Action.NAME), bps.getLoadAction());
+      imap.put(KeyStroke.getKeyStroke("meta O"), bps.getLoadAction().getValue(Action.NAME));
+      map.put(bps.getSaveAction().getValue(Action.NAME), bps.getSaveAction());
+      imap.put(KeyStroke.getKeyStroke("meta S"), bps.getSaveAction().getValue(Action.NAME));
    }
+
+
+   @Override
+   public BundleableDocument getBundleableDocument() {
+      return getStory();
+   }
+
+   @Override
+   public void setBundleableDocument(BundleableDocument newDocument) {
+      setStory((Story)newDocument);
+   }
+
+   void setStory(Story story){
+      setSlideDeck(story);
+   }
+   
+   Story getStory() {
+      return (Story) getSlideDeck();
+   }
+
+
 
 }

@@ -28,12 +28,11 @@ class DefaultRelationship implements Relationship, PropertyChangeListener {
    DefaultRelationship(){   
    }
    
-   @Element
    private Sprite parent;
    
-   @Element
    private Sprite dependent;
    
+   @Element
    @Override
    public void setParent(Sprite parent) {
       if (this.parent != null){
@@ -43,16 +42,26 @@ class DefaultRelationship implements Relationship, PropertyChangeListener {
          parent.addPropertyChangeListener(this);      
       this.parent = parent;
    }
+   
+   @Element
    @Override
    public Sprite getParent() {
       return parent;
    }
+   
+   @Element   
    @Override
    public void setDependent(Sprite dependent) {
+      if (getDependent() != null)
+         getDependent().removePropertyChangeListener(this);
+      if (dependent != null)
+         dependent.addPropertyChangeListener(this);
       this.dependent = dependent;
    }
+   
+   @Element
    @Override
-   public Sprite getDependent() {
+   public Sprite getDependent() {      
       return dependent;
    }
    @Override
@@ -83,16 +92,6 @@ class OffsetRelationship extends DefaultRelationship{
       offsetX = dependent.getX() - parent.getX();
       offsetY = dependent.getY() - parent.getY();  
    }
-   
-   @Override
-   public void setDependent(Sprite dependent) {
-      if (getDependent() != null)
-         getDependent().removePropertyChangeListener(this);
-      if (dependent != null)
-         dependent.addPropertyChangeListener(this);
-      super.setDependent(dependent);
-   }
-
    
    @Override
    public void update(Sprite source){

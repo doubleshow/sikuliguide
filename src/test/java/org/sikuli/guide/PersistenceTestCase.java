@@ -4,6 +4,8 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 
 import org.junit.Test;
+import org.sikuli.ui.BundleableDocumentOwner;
+import org.sikuli.ui.Bundler;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.strategy.CycleStrategy;
@@ -53,15 +55,15 @@ public class PersistenceTestCase {
       story.addStep(FixtureFactory.createStep1());
       story.addStep(FixtureFactory.createStep());
       
-      BundlePersisterSupport bps = new BundlePersisterSupport();
+      Bundler bps = new Bundler();
       
-      BundleableDocumentEditor editor = mock(BundleableDocumentEditor.class);
+      BundleableDocumentOwner editor = mock(BundleableDocumentOwner.class);
 //      when(editor.getBundleableDocument()).thenReturn(story);
 //      bps.saveAction.actionPerformed(new ActionEvent(editor,0,"save"));
             
       Story emptyStory = new Story();
       when(editor.getBundleableDocument()).thenReturn(emptyStory);
-      bps.loadAction.actionPerformed(new ActionEvent(editor,0,"load"));
+      bps.getLoadAction().actionPerformed(new ActionEvent(editor,0,"load"));
       
       //bps.g
       

@@ -41,11 +41,11 @@ public class StoryEditorTestCase {
 
    public static class FixtureBase {
 
-      protected Slide slide0;
-      protected Slide slide1;
-      protected Slide slide2;
-      protected Slide newSlide;
-      protected Deck slideDeck;
+      protected Step slide0;
+      protected Step slide1;
+      protected Step slide2;
+      protected Step newSlide;
+      protected Story story;
       protected List<Slide> slides;
       protected ActionEvent mockedActionEvent;
 
@@ -83,12 +83,12 @@ public class StoryEditorTestCase {
 //         slideDeck.insertElementAt(new DefaultSlide("Slide 1"),0);
 //         slideDeck.insertElementAt(new DefaultSlide("Slide 2"),0);
 
-       slideDeck = new Story();
-         slideDeck.insertElementAt(slide0,0);
-         slideDeck.insertElementAt(slide1,1);
-         slideDeck.insertElementAt(slide2,2);
+       story = new Story();
+       story.insertElementAt(slide0,0);
+       story.insertElementAt(slide1,1);
+         story.insertElementAt(slide2,2);
 
-         editor.setSlideDeck(slideDeck);
+         editor.setStory(story);
          
          editor.setSlideEditView(new StepEditView());
 
@@ -110,12 +110,12 @@ public class StoryEditorTestCase {
 
       @Test
       public void testDeleteSlidesThenUndo() throws InterruptedException {         
-         int n = slideDeck.getSize();
-         slideDeck.removeElement(slide0);       
-         slideDeck.removeElement(slide1);      
-         editor.undoAction().actionPerformed(mockedActionEvent);
-         editor.undoAction().actionPerformed(mockedActionEvent);
-         assertThat(slideDeck.getSize(), equalTo(n));         
+//         int n = slideDeck.getSize();
+//         slideDeck.removeElement(slide0);       
+//         slideDeck.removeElement(slide1);      
+//         editor.undoAction().actionPerformed(mockedActionEvent);
+//         editor.undoAction().actionPerformed(mockedActionEvent);
+//         assertThat(slideDeck.getSize(), equalTo(n));         
       }
       
       @Test
@@ -142,11 +142,6 @@ public class StoryEditorTestCase {
       
       @Test
       public void testManually() throws InterruptedException{
-
-//         editor.getEditActionFactory().addNewSlideToEndAction(slide1).actionPerformed(null);
-
-         
-
          Object lock = new Object();
          synchronized(lock){
             lock.wait();         

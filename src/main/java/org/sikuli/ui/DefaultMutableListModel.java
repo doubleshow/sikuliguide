@@ -52,8 +52,10 @@ class DefaultMutableListModel<T> extends AbstractListModel
 
    public void clear(){
       int n = getSize();
-      elements.clear();
-      fireIntervalRemoved(this,0,n-1);
+      if (n>0){
+         elements.clear();
+         fireIntervalRemoved(this,0,n-1);
+      }
    }
    
 }
