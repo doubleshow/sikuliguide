@@ -2,6 +2,8 @@ package org.sikuli.guide;
 
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.io.StringWriter;
+import java.io.Writer;
 
 import org.junit.Test;
 import org.sikuli.ui.BundleableDocumentOwner;
@@ -47,6 +49,32 @@ public class PersistenceTestCase {
       //File fout = SaveLoadHelper.getXMLFileFromBundle(destBundle);
    }
 
+   @Test
+   public void testXMLSerializationToString() throws Exception{
+      
+      Story story = new Story();
+      story.addStep(FixtureFactory.createStepWithRelationships());
+      story.addStep(FixtureFactory.createStep1());
+      story.addStep(FixtureFactory.createStep());
+
+      
+      Strategy strategy = new CycleStrategy("id","ref");
+      Serializer serializer = new Persister(strategy);
+      
+      Writer writer = new StringWriter();
+      serializer.write(story, writer);
+      
+      System.out.println(writer.toString());
+      
+      
+      Story emptyStory = new Story();
+      serializer.read(emptyStory, writer.toString());
+      
+      assertThat(emptyStory.getSize(), equalTo(story.getSize()));
+      
+   }
+
+   
    @Test
    public void testSaveAndLoadStory() throws Exception{
       

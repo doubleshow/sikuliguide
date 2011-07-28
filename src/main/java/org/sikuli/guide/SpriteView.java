@@ -10,6 +10,7 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Transparency;
 import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
@@ -34,6 +35,13 @@ import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import javax.swing.TransferHandler.TransferSupport;
 
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Root;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.strategy.CycleStrategy;
+import org.simpleframework.xml.strategy.Strategy;
+
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -44,6 +52,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.io.OutputStream;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -119,10 +129,33 @@ class SerialClone {
       }
     }
 }
+
+
+@Root
+class SpriteArrayList {
+   @ElementList
+   List<Sprite> elements = new ArrayList<Sprite>();   
+
+   String toXML(){
+      Strategy strategy = new CycleStrategy("id","ref");
+      Serializer serializer = new Persister(strategy);
+      Writer writer = new StringWriter();
+      try {
+         serializer.write(this, writer);
+         return writer.toString(); 
+      } catch (Exception e) {
+         return "";
+      }
+   }
+
+}
+
+
 class SpriteTransferHandler extends TransferHandler{
       
    DataFlavor serialSpriteFlavor = new DataFlavor(Sprite.class, "Sprite");
    DataFlavor serialArrayListFlavor = new DataFlavor(SpriteArrayList.class, "SpriteArrayList");
+   DataFlavor serializedXMLStringFlavor = new DataFlavor(SpriteArrayList.class, "serializedXMLStringFlavor");  
    
    //Sprite spriteBeingTransferred;
    static Point insertOffset = new Point();
@@ -131,27 +164,35 @@ class SpriteTransferHandler extends TransferHandler{
    protected Transferable createTransferable(JComponent c) {
       System.out.println("SpriteTransfer: createTransferable");
       if (c instanceof SpriteView) {
+         System.out.println("SpriteView"); 
+         
          SpriteView source = (SpriteView) c;
          Sprite copy = SerialClone.clone(source.getSprite());  
-         //insertLocation.setLocation(copy.getX(), copy.getY());
-         insertOffset.setLocation(0,0);//copy.getX(), copy.getY());
+         insertOffset.setLocation(0,0);
          alreadyCut = false;
          return new SpriteTransferable(copy);
-      }else if (c instanceof StepEditView){
          
+      }else if (c instanceof StepEditView){
+         System.out.println("StepEditView");
          
          StepEditView editView = (StepEditView) c;
          SpriteView source = editView.selectionTool.getSelectedSpriteView();
          Sprite copy = SerialClone.clone(source.getSprite());  
          insertOffset.setLocation(0,0);//copy.getX(), copy.getY());
          alreadyCut = false;
-
+         
+         
          List<Sprite> sprites = editView.selectionTool.getSelectedSprites();
-            
-         return new ArrayListTransferable<Sprite>(sprites);         
+         
+//         if (sprites.size() == 1){
+//            return new SpriteTransferable(copy);            
+//         }else{
+            return new ArrayListTransferable<Sprite>(sprites);            
+//         }
       }
       return null;
    }
+   
    
    private boolean hasSerialSpriteFlavor(DataFlavor[] flavors) {
       if (serialSpriteFlavor == null) {
@@ -178,6 +219,16 @@ class SpriteTransferHandler extends TransferHandler{
       }
       return false;
    }
+   
+   private boolean hasStringFlavor(DataFlavor[] flavors) {
+      for (int i = 0; i < flavors.length; i++) {
+         if (flavors[i].equals(DataFlavor.stringFlavor)) {
+            return true;
+         }
+      }
+      return false;
+   }
+
 
    
    @Override
@@ -188,6 +239,9 @@ class SpriteTransferHandler extends TransferHandler{
          return true;
       }
       if (hasSerialArrayListFlavor(flavors)) {
+         return true;
+      }
+      if (hasStringFlavor(flavors)){
          return true;
       }
       return false;
@@ -214,10 +268,24 @@ class SpriteTransferHandler extends TransferHandler{
                sprites.add(sprite);
             }else if (hasSerialArrayListFlavor(support.getDataFlavors())){
                sprites = (ArrayList<Sprite>) transferable.getTransferData(serialArrayListFlavor);
+            }else if (hasStringFlavor(support.getDataFlavors())){
+               sprites = new ArrayList<Sprite>();               
+               String string = (String) transferable.getTransferData(DataFlavor.stringFlavor);
+               Strategy strategy = new CycleStrategy("id","ref");
+               Serializer serializer = new Persister(strategy);
+               System.out.println("Try to import a sprite from this string: " + string);
+               try {
+                  ArrayListTransferable t = serializer.read(ArrayListTransferable.class, string);
+                  sprites = (List<Sprite>) t.data;
+                  System.out.println("Sprite imported from clipboard as string");
+                  //sprites.add(sprite);
+               } catch (Exception e) {
+                  e.printStackTrace();
+               }
             }else{
                return false;
             }
-            
+           
             insertOffset.x += 10;
             insertOffset.y += 10;         
             List<Sprite> spritesToPaste = new ArrayList<Sprite>();
@@ -273,13 +341,15 @@ class SpriteTransferHandler extends TransferHandler{
       return COPY_OR_MOVE;
    }
    
-   public class SpriteArrayList extends ArrayList<Sprite>{
-      
-   }
-
-   public class ArrayListTransferable<T> implements Transferable {
+   @Root
+   static public class ArrayListTransferable<T> implements Transferable {
+      @ElementList
       List<T> data;
 
+      
+      public ArrayListTransferable(){         
+      }
+      
       public ArrayListTransferable(List<T> alist) {
          data = alist;
       }
@@ -289,16 +359,42 @@ class SpriteTransferHandler extends TransferHandler{
          if (!isDataFlavorSupported(flavor)) {
             throw new UnsupportedFlavorException(flavor);
          }
+         
+         if (flavor.equals(serialArrayListFlavor)){
+            return data;         
+         }else if (flavor.equals(DataFlavor.stringFlavor)){
+            // TODO: very messy, needs refactoring
+            Strategy strategy = new CycleStrategy("id","ref");
+            Serializer serializer = new Persister(strategy);
+            Writer writer = new StringWriter();
+            try {
+               serializer.write(this, writer);
+               return writer.toString();
+            } catch (Exception e) {
+               // TODO Auto-generated catch block
+               e.printStackTrace();
+            }
+
+//            SpriteArrayList al = new SpriteArrayList();
+//            al.elements = (List<Sprite>) data;
+//            al.toXML();
+//            return al.toXML();
+         }
          return data;
       }
+     
+      DataFlavor serialArrayListFlavor = new DataFlavor(SpriteArrayList.class, "SpriteArrayList");
+
 
       public DataFlavor[] getTransferDataFlavors() {
-         return new DataFlavor[] { //localArrayListFlavor,
+         return new DataFlavor[] { DataFlavor.stringFlavor, 
                serialArrayListFlavor };
       }
 
       public boolean isDataFlavorSupported(DataFlavor flavor) {
          if (serialArrayListFlavor.equals(flavor)) {
+            return true;
+         }else if (flavor.equals(DataFlavor.stringFlavor)){
             return true;
          }
          return false;
@@ -312,31 +408,44 @@ class SpriteTransferHandler extends TransferHandler{
       public SpriteTransferable(Sprite sprite) {
          this.sprite = sprite;
       }
-
+      
       @Override
       public Object getTransferData(DataFlavor flavor)
             throws UnsupportedFlavorException, IOException {
          if (!isDataFlavorSupported(flavor)) {
             throw new UnsupportedFlavorException(flavor);
          }
+         
+         if (flavor.equals(serialSpriteFlavor)){
+            return sprite;
+         }else if (flavor.equals(serializedXMLStringFlavor)){
+            return sprite.toXML();
+         }else if (flavor.equals(DataFlavor.stringFlavor)){
+            return sprite.toXML();
+         }
          return sprite;
       }
 
       @Override
       public DataFlavor[] getTransferDataFlavors() {
-         return new DataFlavor[] {serialSpriteFlavor}; 
+         return new DataFlavor[] {serialSpriteFlavor,serializedXMLStringFlavor,DataFlavor.stringFlavor}; 
       }
 
       @Override
       public boolean isDataFlavorSupported(DataFlavor flavor) {
-         if (serialSpriteFlavor.equals(flavor)) {
-            return true;
-         }
+         DataFlavor[] flavors = getTransferDataFlavors();
+         for (DataFlavor supportedFlavor : flavors){
+            if (supportedFlavor.equals(flavor)) {
+               return true;
+            }
+         }         
          return false;
       }
       
    }
 }
+
+
 
 class SpriteView extends JPanel implements PropertyChangeListener {
       

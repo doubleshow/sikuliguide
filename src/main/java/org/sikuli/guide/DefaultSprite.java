@@ -9,9 +9,15 @@ import java.beans.PropertyChangeSupport;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.io.StringWriter;
+import java.io.Writer;
 
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.strategy.CycleStrategy;
+import org.simpleframework.xml.strategy.Strategy;
 
 @Root
 public class DefaultSprite implements StyledSprite, Serializable {
@@ -27,6 +33,18 @@ public class DefaultSprite implements StyledSprite, Serializable {
       setY(y);
       setWidth(width);
       setHeight(height);
+   }
+   
+   public String toXML(){
+      Strategy strategy = new CycleStrategy("id","ref");
+      Serializer serializer = new Persister(strategy);
+      Writer writer = new StringWriter();
+      try {
+         serializer.write(this, writer);
+         return writer.toString(); 
+      } catch (Exception e) {
+         return "";
+      }
    }
        
    @Override

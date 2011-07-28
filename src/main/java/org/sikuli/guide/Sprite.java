@@ -33,6 +33,7 @@ public interface Sprite {
    public String getName();
    public void setName(String name);
    
+   public String toXML();   
    
    public void addPropertyChangeListener(PropertyChangeListener listener);
    public void removePropertyChangeListener(PropertyChangeListener listener);
