@@ -407,6 +407,27 @@ class StepEditView extends StepView {
 
       initActionInputMaps();
 
+      initComponents();
+
+      setPreferredSize(new Dimension(800,600));
+
+      setFocusable(true);
+
+      addMouseListener(new MouseAdapter(){         
+         public void mousePressed(MouseEvent e){
+            requestFocus();
+            // this allows the focus to clear when users click
+            // on empty area (not occupied by any sprite)
+            selectionTool.clearSelection();
+         }         
+      });
+
+   }
+
+   @Override
+   void initComponents() {
+      super.initComponents();
+      
       remove(contentLayer);
       remove(contextLayer);
 
@@ -435,20 +456,9 @@ class StepEditView extends StepView {
       add(contentLayer,0);
       add(controlLayer,0);
       add(editLayer,0);      
-
-      setPreferredSize(new Dimension(800,600));
-
-      setFocusable(true);
-
-      addMouseListener(new MouseAdapter(){         
-         public void mousePressed(MouseEvent e){
-            requestFocus();
-            // this allows the focus to clear when users click
-            // on empty area (not occupied by any sprite)
-            selectionTool.clearSelection();
-         }         
-      });
-
+      
+      relationshipGroupView.setSize(editLayer.getSize());
+      editLayer.add(relationshipGroupView);
    }
 
    private void addListenerToSprite(SpriteView spriteView){
@@ -688,95 +698,144 @@ class StepEditView extends StepView {
    }
 
    
-   class RelationshipGroupView extends JPanel implements PropertyChangeListener, 
+   class RelationshipGroupView extends JPanel implements  
    ChangeListener, ListSelectionListener {
       
       RelationshipGroupView(){
-         setOpaque(true);
-         setBackground(new Color(0,1,0,0.1f));   
-         setBorder(BorderFactory.createLineBorder(Color.white));
+         setOpaque(false);
+         setLayout(null);
+         selectionTool.addListSelectionListener(this);
       }
       
-      List<Sprite> highlightedSprites = new ArrayList<Sprite>();
-      void add(Sprite sprite){
-                  
-         Rectangle bounds = ((DefaultSprite) sprite).getBounds();
-         setBounds(bounds);
-         highlightedSprites.add(sprite);
-         addHelper(sprite);                  
+      class RelationshipGroup extends JPanel implements PropertyChangeListener{
          
-         selectionTool.getSelectionModel().addListSelectionListener(this);
-         getStep().addChangeListener(this);
-         for (Sprite s : highlightedSprites){
+         List<Sprite> sprites = new ArrayList<Sprite>();      
+         RelationshipGroup(Sprite sprite){
+            setOpaque(true);            
+            setBackground(new Color(0,1,0,0.1f));
+            setBorder(BorderFactory.createLineBorder(Color.white));
+            sprites = collectRelatedSprites(sprite); 
+            System.out.println("found " + sprites.size() + " related nodes");
+
+            for (Sprite s : sprites){
+               System.out.println(":" + s);
                s.addPropertyChangeListener(this);
+            }
+            updateBounds();
          }
-         updateBounds();
-      }
-      
-      void addHelper(Sprite sprite){
-         for (Relationship rel : getStep().getRelationships()){
-            Sprite nextNode = null;
-            if (sprite == rel.getParent()){
-               nextNode = rel.getDependent();
-            }else if (sprite == rel.getDependent()){
-               nextNode = rel.getParent();
+         
+         @Override
+         public void propertyChange(PropertyChangeEvent arg0) {
+            updateBounds();
+         }
+
+         void updateBounds(){
+            Rectangle bounds = null;
+            
+            // do not should highlight if the group only has an item
+            if (sprites.size() == 1){
+               setVisible(false);
+               return;
+            }else{
+               setVisible(true);
             }
             
-            if (nextNode != null && !highlightedSprites.contains(nextNode)){
-               highlightedSprites.add(nextNode);
-               addHelper(nextNode);
+            
+            for (Sprite sprite : sprites){
+               Rectangle b = ((DefaultSprite) sprite).getBounds();
+               if (bounds == null){
+                  bounds = b;
+               }else{
+                  bounds.add(b);
+               }
             }
-         }                  
+            
+            bounds.grow(3,3);
+            System.out.println("setting bounds to " + bounds);
+
+            setBounds(bounds);
+            RelationshipGroupView.this.repaint();
+         }
       }
+      
+      List<Sprite> collectRelatedSprites(Sprite root){
+         List<Sprite> accumulator = new ArrayList<Sprite>();         
+         accumulator.add(root);
+         collectRelatedSpritesHelper(root, accumulator);
+         return accumulator;
+      }
+
+      void collectRelatedSpritesHelper(Sprite root, List<Sprite> accumulator){
+         for (Relationship rel : getStep().getRelationships()){
+            Sprite nextNode = null;
+            if (root == rel.getParent()){
+               nextNode = rel.getDependent();
+            }else if (root == rel.getDependent()){
+               nextNode = rel.getParent();
+            }
+
+            if (nextNode != null && !accumulator.contains(nextNode)){
+               accumulator.add(nextNode);
+               collectRelatedSpritesHelper(nextNode, accumulator);
+            }
+         }  
+      }
+
+      
+      
+//      void addHelper(Sprite sprite){
+//         for (Relationship rel : getStep().getRelationships()){
+//            Sprite nextNode = null;
+//            if (sprite == rel.getParent()){
+//               nextNode = rel.getDependent();
+//            }else if (sprite == rel.getDependent()){
+//               nextNode = rel.getParent();
+//            }
+//
+//            if (nextNode != null && !highlightedSprites.contains(nextNode)){
+//               highlightedSprites.add(nextNode);
+//               addHelper(nextNode);
+//            }
+//         }                  
+//      }
+      
+      List<RelationshipGroup> groups = new ArrayList<RelationshipGroup>(); 
+      boolean isAlreadyInAGroup(Sprite sprite){
+         for (RelationshipGroup group : groups){
+            if (group.sprites.contains(sprite))
+               return true;
+         }
+         return false;
+      }     
       
       void updateSelectedSprites(){
          clear();
+         getStep().addChangeListener(this);
+
          List<Sprite> sprites = selectionTool.getSelectedSprites();
-         for (Sprite sprite : sprites){
-            add(sprite);
-         }
-      }
-      
-      void updateBounds(){
-         Rectangle bounds = null;
-         
-         // do not should highlight if only one thing is selected
-         if (highlightedSprites.size() == 1){
-            setVisible(false);
-            return;
-         }else{
-            setVisible(true);
-         }
-         
-         
-         for (Sprite sprite : highlightedSprites){
-            Rectangle b = ((DefaultSprite) sprite).getBounds();
-            if (bounds == null){
-               bounds = b;
-            }else{
-               bounds.add(b);
+         for (Sprite sprite : sprites){            
+            if (!isAlreadyInAGroup(sprite)){
+               
+               RelationshipGroup g = new RelationshipGroup(sprite);
+               groups.add(g);
+               //g.setBackground(colors[groups.size()%3]);   
+               add(g);  
             }
          }
-         
-         bounds.grow(3,3);
-         setBounds(bounds);
       }
       
+      
+      
       void clear(){
-         for (Sprite sprite : highlightedSprites){
-            sprite.removePropertyChangeListener(this);
-         }
-         highlightedSprites.clear();
+//         for (SubGroup group : groups){
+//            sprite.removePropertyChangeListener(this);
+//         }
+         groups.clear();
+         removeAll();
          getStep().removeChangeListener(this);
-         selectionTool.getSelectionModel().removeListSelectionListener(this);
-         setVisible(false);
+         //setVisible(false);
       }
-
-      @Override
-      public void propertyChange(PropertyChangeEvent arg0) {
-            updateBounds();
-      }
-
+      
       @Override
       public void stateChanged(ChangeEvent e) {
          if (e.getSource() == getStep()){
@@ -786,6 +845,7 @@ class StepEditView extends StepView {
 
       @Override
       public void valueChanged(ListSelectionEvent e) {
+         System.out.println("slection changed");
          updateSelectedSprites();
       }
       
@@ -793,24 +853,26 @@ class StepEditView extends StepView {
       
    }
    
+   RelationshipGroupView relationshipGroupView = new RelationshipGroupView();
    class SelectionTool implements MouseListener {
       JList selectionList = new JList();
+      public void addListSelectionListener(ListSelectionListener listener) {
+         selectionList.addListSelectionListener(listener);
+      }
+
       ControlBox controlBox = new ControlBox();
       ControlBoxView controlBoxView = new ControlBoxView(controlBox);
-      RelationshipGroupView relationshipGroupView = new RelationshipGroupView();
 
       Map<SpriteView, ControlBoxView> controlBoxes = new HashMap<SpriteView, ControlBoxView>();
 
-      ListSelectionModel getSelectionModel(){
-         return selectionList.getSelectionModel();
-      }
+//      ListSelectionModel getSelectionModel(){
+//         return selectionList.addListSelectionListener(listener);
+//      }
       
       SelectionTool(){
          selectionList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
          //selectionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-         editLayer.add(relationshipGroupView);
-         
-         selectionList.getSelectionModel().addListSelectionListener(relationshipGroupView);
+         //selectionList.getSelectionModel().addListSelectionListener(relationshipGroupView);
       }
 
       public void selectAll() {
@@ -940,8 +1002,8 @@ class StepEditView extends StepView {
          box.setTarget(sprite);
          controlLayer.add(view);
          
-         relationshipGroupView.clear();
-         relationshipGroupView.add(sprite);
+         //relationshipGroupView.clear();
+         //relationshipGroupView.add(sprite);
          //relationshipGroupView.setVisible(true);
 
          view.setVisible(true);
