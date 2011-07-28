@@ -15,6 +15,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +37,10 @@ import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import static com.google.common.collect.Iterables.*;
 import static com.google.common.collect.Lists.*;
@@ -275,21 +281,32 @@ class StepEditKit {
          StepEditView editView = (StepEditView) e.getSource();
          List<SpriteView> spriteViews = editView.selectionTool.getSelectedSpriteViews();
 
-         for (SpriteView spriteView : spriteViews){
-            if (e.getActionCommand().equals(UP)){
-               int y = spriteView.getSprite().getY();
-               spriteView.getSprite().setY(y-10);
-            }else if (e.getActionCommand().equals(DOWN)){
-               int y = spriteView.getSprite().getY();
-               spriteView.getSprite().setY(y+10);
-            }else if (e.getActionCommand().equals(LEFT)){
-               int x = spriteView.getSprite().getX();
-               spriteView.getSprite().setX(x-10);
-            }else if (e.getActionCommand().equals(RIGHT)){
-               int x = spriteView.getSprite().getX();
-               spriteView.getSprite().setX(x+10);
-            }
+         if (e.getActionCommand().equals(UP)){
+            editView.moveTool.moveSelectedSpritesByOffset(0,-10);
+         }else if (e.getActionCommand().equals(DOWN)){
+            editView.moveTool.moveSelectedSpritesByOffset(0,10);
+         }else if (e.getActionCommand().equals(LEFT)){
+            editView.moveTool.moveSelectedSpritesByOffset(-10,0);
+         }else if (e.getActionCommand().equals(RIGHT)){
+            editView.moveTool.moveSelectedSpritesByOffset(10,0);
          }
+         
+//         for (SpriteView spriteView : spriteViews){
+//            if (e.getActionCommand().equals(UP)){
+//
+//               int y = spriteView.getSprite().getY();
+//               spriteView.getSprite().setY(y-10);
+//            }else if (e.getActionCommand().equals(DOWN)){
+//               int y = spriteView.getSprite().getY();
+//               spriteView.getSprite().setY(y+10);
+//            }else if (e.getActionCommand().equals(LEFT)){
+//               int x = spriteView.getSprite().getX();
+//               spriteView.getSprite().setX(x-10);
+//            }else if (e.getActionCommand().equals(RIGHT)){
+//               int x = spriteView.getSprite().getX();
+//               spriteView.getSprite().setX(x+10);
+//            }
+//         }
       }
    }
 
@@ -460,6 +477,7 @@ class StepEditView extends StepView {
    }
 
    private void addListenersToSprites(){
+      // TODO: improve this
       for (Component comp : contentLayer.getComponents()){
          if (comp instanceof SpriteView){
             SpriteView spriteView = (SpriteView) comp;
@@ -554,7 +572,7 @@ class StepEditView extends StepView {
          editLayer.add(proxy);
       }
 
-      private void moveSelectedSpritesByOffset(int dx, int dy){
+      void moveSelectedSpritesByOffset(int dx, int dy){
 
          for (Sprite sprite : selectionTool.getSelectedSprites()){
 
@@ -685,16 +703,130 @@ class StepEditView extends StepView {
       return ret;
    }
 
+   
+   class RelationshipGroupView extends JPanel implements PropertyChangeListener, 
+   ChangeListener, ListSelectionListener {
+      
+      RelationshipGroupView(){
+         setOpaque(true);
+         setBackground(new Color(0,1,0,0.1f));   
+         setBorder(BorderFactory.createLineBorder(Color.white));
+      }
+      
+      List<Sprite> highlightedSprites = new ArrayList<Sprite>();
+      void add(Sprite sprite){
+                  
+         Rectangle bounds = ((DefaultSprite) sprite).getBounds();
+         setBounds(bounds);
+         highlightedSprites.add(sprite);
+         addHelper(sprite);                  
+         
+         selectionTool.getSelectionModel().addListSelectionListener(this);
+         getStep().addChangeListener(this);
+         for (Sprite s : highlightedSprites){
+               s.addPropertyChangeListener(this);
+         }
+         updateBounds();
+      }
+      
+      void addHelper(Sprite sprite){
+         for (Relationship rel : getStep().getRelationships()){
+            Sprite nextNode = null;
+            if (sprite == rel.getParent()){
+               nextNode = rel.getDependent();
+            }else if (sprite == rel.getDependent()){
+               nextNode = rel.getParent();
+            }
+            
+            if (nextNode != null && !highlightedSprites.contains(nextNode)){
+               highlightedSprites.add(nextNode);
+               addHelper(nextNode);
+            }
+         }                  
+      }
+      
+      void updateSelectedSprites(){
+         clear();
+         List<Sprite> sprites = selectionTool.getSelectedSprites();
+         for (Sprite sprite : sprites){
+            add(sprite);
+         }
+      }
+      
+      void updateBounds(){
+         Rectangle bounds = null;
+         
+         // do not should highlight if only one thing is selected
+         if (highlightedSprites.size() == 1){
+            setVisible(false);
+            return;
+         }else{
+            setVisible(true);
+         }
+         
+         
+         for (Sprite sprite : highlightedSprites){
+            Rectangle b = ((DefaultSprite) sprite).getBounds();
+            if (bounds == null){
+               bounds = b;
+            }else{
+               bounds.add(b);
+            }
+         }
+         
+         bounds.grow(3,3);
+         setBounds(bounds);
+      }
+      
+      void clear(){
+         for (Sprite sprite : highlightedSprites){
+            sprite.removePropertyChangeListener(this);
+         }
+         highlightedSprites.clear();
+         getStep().removeChangeListener(this);
+         selectionTool.getSelectionModel().removeListSelectionListener(this);
+         setVisible(false);
+      }
+
+      @Override
+      public void propertyChange(PropertyChangeEvent arg0) {
+            updateBounds();
+      }
+
+      @Override
+      public void stateChanged(ChangeEvent e) {
+         if (e.getSource() == getStep()){
+            updateSelectedSprites();
+         }         
+      }
+
+      @Override
+      public void valueChanged(ListSelectionEvent e) {
+         updateSelectedSprites();
+      }
+      
+      
+      
+   }
+   
    class SelectionTool implements MouseListener {
       JList selectionList = new JList();
       ControlBox controlBox = new ControlBox();
       ControlBoxView controlBoxView = new ControlBoxView(controlBox);
+      RelationshipGroupView relationshipGroupView = new RelationshipGroupView();
 
       Map<SpriteView, ControlBoxView> controlBoxes = new HashMap<SpriteView, ControlBoxView>();
 
+      ListSelectionModel getSelectionModel(){
+         return selectionList.getSelectionModel();
+      }
+      
       SelectionTool(){
          selectionList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
          //selectionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+         editLayer.add(relationshipGroupView);
+         
+         selectionList.getSelectionModel().addListSelectionListener(relationshipGroupView);
       }
 
       public void selectAll() {
@@ -711,6 +843,7 @@ class StepEditView extends StepView {
          selectionList.clearSelection();
          controlLayer.removeAll();
          editTool.endEdit();
+         relationshipGroupView.clear();
          repaint();
       }
 
@@ -822,6 +955,10 @@ class StepEditView extends StepView {
          ControlBoxView view = new ControlBoxView(box);
          box.setTarget(sprite);
          controlLayer.add(view);
+         
+         relationshipGroupView.clear();
+         relationshipGroupView.add(sprite);
+         //relationshipGroupView.setVisible(true);
 
          view.setVisible(true);
          view.repaint();
