@@ -104,7 +104,6 @@ class StepEditKit {
             for (Sprite sprite : sprites){
                step.removeRelationships(sprite);
             }
-            
          }
       }
 
@@ -751,16 +750,12 @@ class StepEditView extends StepView {
             setBackground(new Color(0,1,0,0.1f));
             setBorder(BorderFactory.createLineBorder(Color.white));
             sprites = collectRelatedSprites(sprite); 
-            System.out.println("found " + sprites.size() + " related nodes");
-
             for (Sprite s : sprites){
-               System.out.println(":" + s);
                s.addPropertyChangeListener(this);
             }
             updateBounds();
          }
-         
-         
+                  
          // allows updates when sprites are moved
          @Override
          public void propertyChange(PropertyChangeEvent arg0) {
@@ -819,23 +814,7 @@ class StepEditView extends StepView {
          }  
       }
 
-      
-      
-//      void addHelper(Sprite sprite){
-//         for (Relationship rel : getStep().getRelationships()){
-//            Sprite nextNode = null;
-//            if (sprite == rel.getParent()){
-//               nextNode = rel.getDependent();
-//            }else if (sprite == rel.getDependent()){
-//               nextNode = rel.getParent();
-//            }
-//
-//            if (nextNode != null && !highlightedSprites.contains(nextNode)){
-//               highlightedSprites.add(nextNode);
-//               addHelper(nextNode);
-//            }
-//         }                  
-//      }
+  
       
       List<RelationshipGroup> groups = new ArrayList<RelationshipGroup>(); 
       boolean isAlreadyInAGroup(Sprite sprite){
@@ -852,8 +831,7 @@ class StepEditView extends StepView {
 
          List<Sprite> sprites = selectionTool.getSelectedSprites();
          for (Sprite sprite : sprites){            
-            if (!isAlreadyInAGroup(sprite)){
-               
+            if (!isAlreadyInAGroup(sprite)){               
                RelationshipGroup g = new RelationshipGroup(sprite);
                groups.add(g);
                add(g);  

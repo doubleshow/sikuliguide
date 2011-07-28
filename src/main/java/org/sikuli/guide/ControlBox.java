@@ -97,7 +97,6 @@ class ControlBoxView extends SpriteView {
       }
 
       void update(ControlPoint cp, Point p){
-         //Debug.info("released at: " + e.getPoint());
          repaint();
          int dx=0;
          int dy=0;
@@ -123,11 +122,33 @@ class ControlBoxView extends SpriteView {
             dh = p.y - yo;
          }
 
+         Rectangle r0 = getBounds();
          Rectangle rect = getBounds();
          rect.x += dx;
          rect.y += dy;
          rect.height += dh;
          rect.width += dw;
+         
+         Sprite targetSprite = ((ControlBox) _controlBox).getTarget();
+         
+
+         
+         rect.grow(-10,-10);
+         if (isAspectRatioPreserving && targetSprite instanceof DefaultContextImage){            
+            
+            float aspectRatio = ((DefaultContextImage) targetSprite).getAspectRatio();
+
+            int height = (int) (rect.width * aspectRatio);
+            int ddh = height - rect.height;
+            if (cp  == tr || cp == tl){
+               rect.y = rect.y + rect.height - height;
+               rect.height = height;
+            } else if (cp == bl || cp == br){
+               rect.height = height;
+            }
+            
+         }
+         rect.grow(10,10);
          setBounds(rect);
 
 
@@ -137,18 +158,18 @@ class ControlBoxView extends SpriteView {
          Rectangle bounds = new Rectangle(getBounds());
          bounds.grow(-10,-10);
 
-
-         Sprite controlledModel = ((ControlBox) _controlBox).getTarget();
-         controlledModel.setX(bounds.x);
-         controlledModel.setY(bounds.y);
-         controlledModel.setWidth(bounds.width);
-         controlledModel.setHeight(bounds.height);
+         targetSprite.setX(bounds.x);
+         targetSprite.setY(bounds.y);
+         targetSprite.setWidth(bounds.width);
+         targetSprite.setHeight(bounds.height);
 
 
       }
 
 
    }
+   
+   boolean isAspectRatioPreserving = true;
 
 
    class ControlPoint extends JComponent{

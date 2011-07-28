@@ -29,6 +29,7 @@ public class SlideEditView extends JPanel implements ChangeListener {
    public void stateChanged(ChangeEvent e) {
       refresh();
       repaint();
+      validate();
    }
 
 }

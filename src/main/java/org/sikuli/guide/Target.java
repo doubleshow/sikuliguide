@@ -1,6 +1,7 @@
 package org.sikuli.guide;
 
 import java.awt.BasicStroke;
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -9,8 +10,13 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 
 import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+
+import net.miginfocom.swing.MigLayout;
 
 interface Target extends StyledSprite {
    public BufferedImage getBufferedImage();
@@ -110,10 +116,25 @@ class TargetView extends SpriteView {
       super(targetSprite);
       _target = targetSprite;
       setOpaque(false);
+      //setLayout(new MigLayout());
+      setLayout(new BorderLayout());
 //      setMinimumSize(new Dimension(25,25));
 //      updateBounds();
+      URL imageURL = getClass().getResource("images/anchor.png");
+      if (imageURL != null) {
+          ImageIcon icon = new ImageIcon(imageURL);
+          JLabel label = new JLabel(icon);
+          //add(label);
+          add(label,BorderLayout.CENTER);
+      }
+      //validate();
    }
    
+   @Override
+   protected void updateBounds(){
+      super.updateBounds();
+      validate();
+   }   
    
    @Override
    public void paintComponent(Graphics g){
