@@ -596,7 +596,8 @@ class StepEditView extends StepView {
 
          Proxy() {
             setOpaque(true);
-            setBackground(new Color(0.8f,0,0,0.5f));
+            setLayout(null);
+            setBackground(new Color(0,0,0,0.1f));
             cm = new ComponentDragMover();
             cm.registerComponent(this);
             cm.addMoveListener(new DraggedMoveListener(){
@@ -613,10 +614,13 @@ class StepEditView extends StepView {
             });
          }
 
-         Sprite target;
-         void setMoveTarget(Sprite sprite){
-            target = sprite;
-         }
+//         Sprite target;
+//         void setMoveTarget(Sprite sprite){
+//            target = sprite;
+//            
+//            
+//            
+//         }
 
          void setMoveTargets(List<Sprite> sprites){
 
@@ -627,9 +631,41 @@ class StepEditView extends StepView {
                   bounds = b;
                else
                   bounds.add(b);
-            }
+               
+               // also each sprite's dependents
+               List<Sprite> dependents = getStep().getDependentsOf(s);
+               for (Sprite d : dependents){
+                  bounds.add(((DefaultSprite) d).getBounds());
+               }
+
+            }            
+
             if (bounds != null)
                setBounds(bounds);
+
+            Point o = bounds.getLocation();
+
+            // add views
+            removeAll();
+            for (Sprite s : sprites){
+               SpriteView v = ViewFactory.createView(s);
+               v.setOffset(new Point(-o.x,-o.y));
+               v.updateBounds();
+               v.setOpacity(0.5f);
+               add(v);
+               
+//               // also each sprite's dependents
+               List<Sprite> dependents = getStep().getDependentsOf(s);
+               for (Sprite d : dependents){
+                  v = ViewFactory.createView(d);
+                  v.setOffset(new Point(-o.x,-o.y));
+                  v.updateBounds();
+                  v.setOpacity(0.5f);
+                  add(v);
+               }
+
+            }     
+            
          }
       }
 
@@ -724,6 +760,8 @@ class StepEditView extends StepView {
             updateBounds();
          }
          
+         
+         // allows updates when sprites are moved
          @Override
          public void propertyChange(PropertyChangeEvent arg0) {
             updateBounds();
@@ -818,31 +856,27 @@ class StepEditView extends StepView {
                
                RelationshipGroup g = new RelationshipGroup(sprite);
                groups.add(g);
-               //g.setBackground(colors[groups.size()%3]);   
                add(g);  
             }
          }
       }
       
-      
-      
       void clear(){
-//         for (SubGroup group : groups){
-//            sprite.removePropertyChangeListener(this);
-//         }
          groups.clear();
          removeAll();
          getStep().removeChangeListener(this);
-         //setVisible(false);
       }
       
+      // allows update when sprites are linked/unlinked
       @Override
       public void stateChanged(ChangeEvent e) {
          if (e.getSource() == getStep()){
             updateSelectedSprites();
          }         
       }
-
+      
+      
+      // allows update when sprites are selected/unselected
       @Override
       public void valueChanged(ListSelectionEvent e) {
          System.out.println("slection changed");

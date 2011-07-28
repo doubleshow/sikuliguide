@@ -453,7 +453,8 @@ class SpriteView extends JPanel implements PropertyChangeListener {
       
    private float opacity = 1.0f;
    
-
+   private Point offset = new Point(0,0);
+   
    
    public SpriteView(Sprite sprite){
       _sprite = sprite;
@@ -481,7 +482,7 @@ class SpriteView extends JPanel implements PropertyChangeListener {
    }
    
    protected void updateBounds(){
-      setLocation(_sprite.getX(), _sprite.getY());
+      setLocation(_sprite.getX() + offset.x, _sprite.getY() + offset.y);
       
       Dimension minSize = getMinimumSize();
       setSize(Math.max(minSize.width, _sprite.getWidth()),
@@ -558,6 +559,14 @@ class SpriteView extends JPanel implements PropertyChangeListener {
 
    public float getOpacity() {
       return opacity;
+   }
+
+   public void setOffset(Point offset) {
+      this.offset = offset;
+   }
+
+   public Point getOffset() {
+      return offset;
    }
 }
 

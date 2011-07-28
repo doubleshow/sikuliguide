@@ -141,6 +141,16 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
       return newList;
    }
    
+   public List<Sprite> getDependentsOf(Sprite sprite){
+      List<Sprite> dependents = new ArrayList<Sprite>();
+      for (Relationship r : relationships){
+         if (r.getParent() == sprite){
+            dependents.add(r.getDependent());
+         }        
+      }
+      return dependents;
+   }
+   
    public void removeRelationship(Relationship rel) {
       rel.setParent(null); // TODO: this is a hack to remove property listeners to parent
       rel.setDependent(null);
