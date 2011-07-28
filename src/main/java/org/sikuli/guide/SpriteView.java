@@ -577,6 +577,8 @@ class ViewFactory {
          return new TextView((Text)sprite);
       else if (sprite instanceof Circle)
          return new CircleView((Circle)sprite);
+      else if (sprite instanceof ContextImage)
+         return new ContextImageView((ContextImage)sprite);
 
       return new SpriteView(sprite);
    }      

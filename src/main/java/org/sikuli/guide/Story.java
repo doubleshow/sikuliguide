@@ -113,7 +113,7 @@ implements PropertyChangeListener, BundleableDocument {
    public List<Bundleable> getBundleables() {
       List<Bundleable> list = new ArrayList<Bundleable>();
       for (Step step : getSteps()){
-         list.add((Bundleable) step.getContextImage());
+         list.addAll((List<Bundleable>) step.getContextImages());
       }
       return list;
    }

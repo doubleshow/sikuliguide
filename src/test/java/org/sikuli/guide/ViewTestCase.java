@@ -90,7 +90,27 @@ class FixtureFactory {
       step.addSprite(circle);
       step.addSprite(flag);
       step.addSprite(target);
-      step.setContextImage(createContextImage1());
+      step.addSprite(createContextImage1());
+      return step;
+   }
+   
+   static Step createStepWithTwoContextImages(){
+      Step step = new Step();            
+
+      final Circle circle = FixtureFactory.createCircle();
+      final FlagText flag = FixtureFactory.createFlagText();
+      final Target target = FixtureFactory.createTarget();
+      final Text text = FixtureFactory.createText();
+
+      ContextImage image0 = createContextImage();
+      ContextImage image1 = createContextImage1();
+      step.addSprite(circle);
+      step.addSprite(flag);
+      step.addSprite(target);      
+      step.addSprite(text); 
+      step.addSprite(image0);
+      step.addSprite(image1);
+      
       return step;
    }
    
@@ -115,7 +135,7 @@ class FixtureFactory {
 //      step.addRelationship(new SideRelationship(contextTarget,text,Side.LEFT));
       step.addRelationship(new OffsetRelationship(contextTarget,text));
       
-      step.setContextImage(image);
+      step.addSprite(image);
       return step;
    }
    
@@ -132,7 +152,7 @@ class FixtureFactory {
       step.addSprite(flag);
       step.addSprite(target);
             
-      step.setContextImage(createContextImage());
+      step.addSprite(createContextImage());
       
       return step;
    }

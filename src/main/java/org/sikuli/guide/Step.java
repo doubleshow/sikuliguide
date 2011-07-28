@@ -15,6 +15,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotUndoException;
 
+import org.sikuli.ui.Bundleable;
 import org.sikuli.ui.DefaultSlide;
 import org.sikuli.ui.Slide;
 import org.simpleframework.xml.Element;
@@ -42,17 +43,17 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
    int canvasWidth;
    int canvasHeight;   
    
-   @Element
-   ContextImage _contextImage;
-   public ContextImage getContextImage(){
-      return _contextImage;
-   }   
+//   @Element
+//   ContextImage _contextImage;
+//   public ContextImage getContextImage(){
+//      return _contextImage;
+//   }   
    
-   public void setContextImage(ContextImage contextImage){
-      _contextImage = contextImage;
-      _spriteList.removeElement(_contextImage);
-      _spriteList.addElement(_contextImage);
-   }
+//   public void setContextImage(ContextImage contextImage){
+//      _contextImage = contextImage;
+//      _spriteList.removeElement(_contextImage);
+//      _spriteList.addElement(_contextImage);
+//   }
    
    public List<Target> getTargets(){
       List<Target> aList = new ArrayList<Target>();
@@ -167,6 +168,16 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
       List<Sprite> aList = new ArrayList<Sprite>();
       for (int i = 0; i < _spriteList.getSize(); ++i){
          aList.add((Sprite) _spriteList.getElementAt(i));
+      }
+      return aList;
+   }
+
+   public List<? super ContextImage> getContextImages() {
+      List<ContextImage> aList = new ArrayList<ContextImage>();
+      for (int i = 0; i < _spriteList.getSize(); ++i){
+         Sprite sprite = (Sprite) _spriteList.getElementAt(i);
+         if (sprite instanceof ContextImage)
+            aList.add((ContextImage)sprite);
       }
       return aList;
    }

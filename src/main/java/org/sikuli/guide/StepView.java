@@ -22,22 +22,16 @@ import org.sikuli.ui.SlideEditView;
 class StepThumbView extends JPanel {
    
    private Step _step;   
-   private void updateStep(){      
-      
-      removeAll();
-      
-      for (Sprite sprite : _step.getSprites()){       
-         
+   private void updateStep(){            
+      removeAll();      
+      for (Sprite sprite : _step.getSprites()){                
+         SpriteView view = ViewFactory.createView(sprite);            
          if (sprite instanceof ContextImage){
-            ContextImageView view = ViewFactory.createView(_step.getContextImage());
             add(view);
          }else{
-            SpriteView view = ViewFactory.createView(sprite);            
             add(view,0);
          }
       }      
-      
-//      add(view);
    }
    
    
@@ -48,7 +42,9 @@ class StepThumbView extends JPanel {
          return;
         
         Dimension size = getSize();
-        Dimension contentSize = new Dimension(_step.getContextImage().getWidth(), _step.getContextImage().getHeight());
+        
+        // TODO: calculate the size context sensitively
+        Dimension contentSize = new Dimension(640,480);//.getContextImage().getWidth(), _step.getContextImage().getHeight());
        
         float scalex = 1f* size.width / contentSize.width;
         float scaley = 1f* size.height / contentSize.height;
@@ -94,23 +90,23 @@ public class StepView extends SlideEditView {
    protected Step _step;   
    
    JPanel contentLayer = new JPanel();
+   JPanel contextLayer = new JPanel();
    
    protected void updateStep(){            
       contentLayer.removeAll();
+      contextLayer.removeAll();
       
       if (_step == null)
-         return;
-      
+         return;      
       
       for (Sprite sprite : _step.getSprites()){       
          
+         SpriteView view = ViewFactory.createView(sprite);
          if (sprite instanceof ContextImage){
             ContextImage contextImage = (ContextImage) sprite;
-            ContextImageView view = ViewFactory.createView(_step.getContextImage());
             view.setLocation(contextImage.getX(),contextImage.getY());
-            contentLayer.add(view);
+            contextLayer.add(view);
          }else{
-            SpriteView view = ViewFactory.createView(sprite);            
             contentLayer.add(view,0);
          }
       }   
@@ -155,6 +151,18 @@ public class StepView extends SlideEditView {
    }
 
 
+   
+   
+   void initComponents(){
+      contentLayer.setLayout(null);
+      contentLayer.setSize(640,480);
+      add(contentLayer);
+      
+      contextLayer.setLayout(null);
+      contextLayer.setSize(640,480);
+      add(contextLayer);     
+   }
+   
 
    StepView(){
       setLayout(null);      
@@ -162,27 +170,20 @@ public class StepView extends SlideEditView {
       // so that it works on Windows
       setBackground(null);  
       
-      contentLayer.setLayout(null);
-      contentLayer.setSize(640,480);//_step.getContextImage().getWidth(), _step.getContextImage().getHeight());
-      add(contentLayer);
-      
       
       setPreferredSize(new Dimension(640,480));
-      
-      
-      
-      setTransferHandler(new SpriteTransferHandler());
-      addKeyListener(new KeyAdapter(){
-         
-         @Override
-         public void keyPressed(KeyEvent k){
-            //System.out.println("here");
-            if (k.getKeyCode() == KeyEvent.VK_C){
-               TransferHandler handler = getTransferHandler(); 
-               handler.exportToClipboard((JComponent) k.getSource(), Toolkit.getDefaultToolkit().getSystemClipboard(), TransferHandler.COPY);
-            }
-         }
-      });
+//      setTransferHandler(new SpriteTransferHandler());
+//      addKeyListener(new KeyAdapter(){
+//         
+//         @Override
+//         public void keyPressed(KeyEvent k){
+//            //System.out.println("here");
+//            if (k.getKeyCode() == KeyEvent.VK_C){
+//               TransferHandler handler = getTransferHandler(); 
+//               handler.exportToClipboard((JComponent) k.getSource(), Toolkit.getDefaultToolkit().getSystemClipboard(), TransferHandler.COPY);
+//            }
+//         }
+//      });
 
    }
    

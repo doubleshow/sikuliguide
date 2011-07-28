@@ -406,22 +406,21 @@ class StepEditView extends StepView {
 
       initActionInputMaps();
 
-      //setOpaque(true);
-      //setBackground(Color.white);
-      //setBorder(BorderFactory.createLineBorder(new Color(0.4f,0.4f,0.4f)));
-      //setBorder(BorderFactory.createBorder(new Color(0.4f,0.4f,0.4f)));
-
-
       remove(contentLayer);
+      remove(contextLayer);
 
       Canvas canvas = new Canvas();
       canvas.setSize(640,480);
       canvas.setLocation(40,40);
-
+      
       contentLayer.setOpaque(false);
       contentLayer.setLayout(null);
       contentLayer.setSize(800,600);
 
+      contextLayer.setOpaque(false);
+      contextLayer.setLayout(null);
+      contextLayer.setSize(800,600);
+      
       controlLayer.setOpaque(false);
       controlLayer.setLayout(null);
       controlLayer.setSize(800,600);
@@ -431,6 +430,7 @@ class StepEditView extends StepView {
       editLayer.setSize(800,600);
 
       add(canvas,0);
+      add(contextLayer,0);
       add(contentLayer,0);
       add(controlLayer,0);
       add(editLayer,0);      
@@ -452,16 +452,21 @@ class StepEditView extends StepView {
 
    private void addListenerToSprite(SpriteView spriteView){
       spriteView.addMouseListener(selectionTool);
-      //
+
       spriteView.addMouseListener(moveTool);           
       spriteView.addMouseMotionListener(moveTool);
-      //      
+
       spriteView.addMouseListener(editTool);
-      //spriteView.addKeyListener(editTool);
    }
 
    private void addListenersToSprites(){
       for (Component comp : contentLayer.getComponents()){
+         if (comp instanceof SpriteView){
+            SpriteView spriteView = (SpriteView) comp;
+            addListenerToSprite(spriteView);
+         }
+      }
+      for (Component comp : contextLayer.getComponents()){
          if (comp instanceof SpriteView){
             SpriteView spriteView = (SpriteView) comp;
             addListenerToSprite(spriteView);
@@ -672,6 +677,10 @@ class StepEditView extends StepView {
       List<SpriteView> ret = new ArrayList<SpriteView>();
       for (int i = 0; i < comps.length; ++i){
          ret.add((SpriteView)comps[i]);
+      }
+      comps = contextLayer.getComponents();
+      for (int i = 0; i < comps.length; ++i){
+         ret.add((SpriteView)comps[i]);
       }         
       return ret;
    }
@@ -825,9 +834,9 @@ class StepEditView extends StepView {
 
       SpriteView getSpriteView(int index){
          Sprite sprite = _step.getSprites().get(index);
-         for (Component comp : contentLayer.getComponents()){
-            if (((SpriteView) comp).getSprite().equals(sprite)){
-               return (SpriteView) comp;
+         for (SpriteView view : getSpriteViews()){
+            if (view.getSprite().equals(sprite)){
+               return view;
             }            
          }
          return null;

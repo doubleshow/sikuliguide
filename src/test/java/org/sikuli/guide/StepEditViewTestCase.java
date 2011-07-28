@@ -56,7 +56,7 @@ public class StepEditViewTestCase {
       step.addSprite(circle);
       step.addSprite(flag);
       step.addSprite(target);
-      step.setContextImage(contextImage);
+      step.addSprite(contextImage);
       
       stepView = new StepEditView(step);
       

@@ -41,7 +41,7 @@ public class StoryEditorTestCase {
 
    public static class FixtureBase {
 
-      protected Step slide0;
+      protected Step step0;
       protected Step slide1;
       protected Step slide2;
       protected Step newSlide;
@@ -69,36 +69,32 @@ public class StoryEditorTestCase {
 
 
 
-//         slide0 = FixtureFactory.createStep();
-         slide0 = FixtureFactory.createStepWithRelationships();
-         slide0.setName("Step 0");
+         //         slide0 = FixtureFactory.createStep();
+         step0 = FixtureFactory.createStepWithRelationships();
+         step0.setName("Step 0");
          slide1 = FixtureFactory.createStep1();
          slide1.setName("Step 1");
          slide2 = FixtureFactory.createStep1();
          slide2.setName("Step 2");
 
-         
-//         slideDeck = new DefaultSlideDeck();
-//         slideDeck.insertElementAt(new DefaultSlide("Slide 0"),0);
-//         slideDeck.insertElementAt(new DefaultSlide("Slide 1"),0);
-//         slideDeck.insertElementAt(new DefaultSlide("Slide 2"),0);
 
-       story = new Story();
-       story.insertElementAt(slide0,0);
-       story.insertElementAt(slide1,1);
-         story.insertElementAt(slide2,2);
+         //         slideDeck = new DefaultSlideDeck();
+         //         slideDeck.insertElementAt(new DefaultSlide("Slide 0"),0);
+         //         slideDeck.insertElementAt(new DefaultSlide("Slide 1"),0);
+         //         slideDeck.insertElementAt(new DefaultSlide("Slide 2"),0);
+
+         story = new Story();
+         story.addStep(FixtureFactory.createStepWithRelationships());
+         story.addStep(FixtureFactory.createStepWithTwoContextImages());
+//         story.insertElementAt(step0,0);
+//         story.insertElementAt(slide1,1);
+//         story.insertElementAt(slide2,2);
 
          editor.setStory(story);
-         
+
          editor.setSlideEditView(new StepEditView());
 
-         StoryListView listView = new StoryListView();
-         //listView.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-         //listView.setCellRenderer(new TestStepCellRenderer());
-         //listView.setCellRenderer(new MyCellRenderer());
-         editor.setSlideDeckListView(listView);
 
-         
          window = new FrameFixture(frame);
          window.show(); // shows the frame to test
       }
@@ -110,36 +106,36 @@ public class StoryEditorTestCase {
 
       @Test
       public void testDeleteSlidesThenUndo() throws InterruptedException {         
-//         int n = slideDeck.getSize();
-//         slideDeck.removeElement(slide0);       
-//         slideDeck.removeElement(slide1);      
-//         editor.undoAction().actionPerformed(mockedActionEvent);
-//         editor.undoAction().actionPerformed(mockedActionEvent);
-//         assertThat(slideDeck.getSize(), equalTo(n));         
+         //         int n = slideDeck.getSize();
+         //         slideDeck.removeElement(slide0);       
+         //         slideDeck.removeElement(slide1);      
+         //         editor.undoAction().actionPerformed(mockedActionEvent);
+         //         editor.undoAction().actionPerformed(mockedActionEvent);
+         //         assertThat(slideDeck.getSize(), equalTo(n));         
       }
-      
+
       @Test
       public void testDeleteASpriteThenUndo() throws InterruptedException {         
          //int n = slideDeck.size();
          //slideDeck.remove(0);       
          //slideDeck.remove(0);
-         ((Step)slide0).removeSprite(0);
-         ((Step)slide0).removeSprite(0);
-         ((Step)slide0).removeSprite(0);
-         editor.undoAction().actionPerformed(mockedActionEvent);
-         editor.undoAction().actionPerformed(mockedActionEvent);
-         editor.undoAction().actionPerformed(mockedActionEvent);
+//         ((Step)step0).removeSprite(0);
+//         ((Step)step0).removeSprite(0);
+//         ((Step)step0).removeSprite(0);
+//         editor.undoAction().actionPerformed(mockedActionEvent);
+//         editor.undoAction().actionPerformed(mockedActionEvent);
+//         editor.undoAction().actionPerformed(mockedActionEvent);
+//
+//         //         editor.undoAction().actionPerformed(mockedActionEvent);
+         //         assertThat(slideDeck.size(), equalTo(n));        
 
-         //         editor.undoAction().actionPerformed(mockedActionEvent);
-//         assertThat(slideDeck.size(), equalTo(n));        
-         
          Object lock = new Object();
          synchronized(lock){
             lock.wait();         
          }
 
       }
-      
+
       @Test
       public void testManually() throws InterruptedException{
          Object lock = new Object();
@@ -149,44 +145,44 @@ public class StoryEditorTestCase {
       }
    }
 }
-
-
-class TestStepCellRenderer extends JLabel implements ListCellRenderer{
-
-   JLabel label = new JLabel();
-   TestStepCellRenderer(){         
-      setLayout(new GridBagLayout());
-      setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-
-      //_thumbView.setPreferredSize(new Dimension(140,140));        
-
-      GridBagConstraints c = new GridBagConstraints();
-      c.anchor = GridBagConstraints.CENTER;
-      add(label,c);
-      validate();
-   }
-   @Override
-   public Component getListCellRendererComponent(
-         JList list,              // the list
-         Object value,            // value to display
-         int index,               // cell index
-         boolean isSelected,      // is the cell selected
-         boolean cellHasFocus)    // does the cell have focus
-   {
-
-      Step step = (Step) value;
-
-      label.setText(""+step.getSprites().size() + " sprites");
-
-      setPreferredSize(new Dimension(80,80));
-
-      if (isSelected){
-         setBorder(BorderFactory.createLineBorder(Color.red, 5));
-      }else{
-         setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-      }
-
-      return this;
-   }   
-}
+//
+//
+//class TestStepCellRenderer extends JLabel implements ListCellRenderer{
+//
+//   JLabel label = new JLabel();
+//   TestStepCellRenderer(){         
+//      setLayout(new GridBagLayout());
+//      setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+//
+//      //_thumbView.setPreferredSize(new Dimension(140,140));        
+//
+//      GridBagConstraints c = new GridBagConstraints();
+//      c.anchor = GridBagConstraints.CENTER;
+//      add(label,c);
+//      validate();
+//   }
+//   @Override
+//   public Component getListCellRendererComponent(
+//         JList list,              // the list
+//         Object value,            // value to display
+//         int index,               // cell index
+//         boolean isSelected,      // is the cell selected
+//         boolean cellHasFocus)    // does the cell have focus
+//   {
+//
+//      Step step = (Step) value;
+//
+//      label.setText(""+step.getSprites().size() + " sprites");
+//
+//      setPreferredSize(new Dimension(80,80));
+//
+//      if (isSelected){
+//         setBorder(BorderFactory.createLineBorder(Color.red, 5));
+//      }else{
+//         setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+//      }
+//
+//      return this;
+//   }   
+//}
 

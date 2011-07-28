@@ -18,8 +18,8 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Validate;
 
-interface ContextImage extends Sprite {   
-   BufferedImage getBufferedImage();  
+abstract class ContextImage extends DefaultSprite implements Bundleable{   
+   abstract BufferedImage getBufferedImage();  
 }
 
 class ContextImageView extends SpriteView {
@@ -46,8 +46,8 @@ class ContextImageView extends SpriteView {
 }
 
 @Root
-class DefaultContextImage extends DefaultSprite 
-   implements ContextImage, Serializable, Bundleable {
+class DefaultContextImage extends ContextImage 
+   implements Serializable, Bundleable {
    
    transient BufferedImage image = null;   
    SerializableBufferedImage serializableImage;

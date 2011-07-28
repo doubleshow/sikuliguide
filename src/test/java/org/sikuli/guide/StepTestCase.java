@@ -94,19 +94,5 @@ public class StepTestCase {
       step.removeRelationship(existingRelationship1);
       assertThat(step.getRelationships(), not(hasItem((existingRelationship1))));
    }
-
-   
-   @Test
-   public void testSetContextImage(){
-            
-      ContextImage contextImage = mock(ContextImage.class);
-      
-      
-      Step step = new Step();
-      
-      step.setContextImage(contextImage);
-      
-      assertThat(step.getContextImage(), sameInstance(contextImage));
-      
-   }
+ 
 }
