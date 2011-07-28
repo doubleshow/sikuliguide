@@ -84,6 +84,7 @@ public class StoryEditorTestCase {
          //         slideDeck.insertElementAt(new DefaultSlide("Slide 2"),0);
 
          story = new Story();
+         story.addStep(FixtureFactory.createStepWithTwoTargets());
          story.addStep(FixtureFactory.createStepWithRelationships());
          story.addStep(FixtureFactory.createStepWithTwoContextImages());
 //         story.insertElementAt(step0,0);

@@ -90,6 +90,9 @@ class StepEditKit {
 
                if (sprite instanceof ContextImage)
                   continue;   // don't link a context image to the target
+               
+               // remove from all its existing relationships
+               step.removeRelationships(sprite);
 
                System.out.println("linking:" + count);
                Relationship r = new OffsetRelationship(target, sprite);
@@ -279,8 +282,6 @@ class StepEditKit {
       @Override
       public void actionPerformed(ActionEvent e) {
          StepEditView editView = (StepEditView) e.getSource();
-         List<SpriteView> spriteViews = editView.selectionTool.getSelectedSpriteViews();
-
          if (e.getActionCommand().equals(UP)){
             editView.moveTool.moveSelectedSpritesByOffset(0,-10);
          }else if (e.getActionCommand().equals(DOWN)){
@@ -289,24 +290,7 @@ class StepEditKit {
             editView.moveTool.moveSelectedSpritesByOffset(-10,0);
          }else if (e.getActionCommand().equals(RIGHT)){
             editView.moveTool.moveSelectedSpritesByOffset(10,0);
-         }
-         
-//         for (SpriteView spriteView : spriteViews){
-//            if (e.getActionCommand().equals(UP)){
-//
-//               int y = spriteView.getSprite().getY();
-//               spriteView.getSprite().setY(y-10);
-//            }else if (e.getActionCommand().equals(DOWN)){
-//               int y = spriteView.getSprite().getY();
-//               spriteView.getSprite().setY(y+10);
-//            }else if (e.getActionCommand().equals(LEFT)){
-//               int x = spriteView.getSprite().getX();
-//               spriteView.getSprite().setX(x-10);
-//            }else if (e.getActionCommand().equals(RIGHT)){
-//               int x = spriteView.getSprite().getX();
-//               spriteView.getSprite().setX(x+10);
-//            }
-//         }
+         }         
       }
    }
 
