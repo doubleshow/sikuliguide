@@ -109,7 +109,7 @@ public class SlideDeckEditorTest {
          window = new FrameFixture(frame);
          window.show(); // shows the frame to test
 
-         fListView = new JListFixture(window.robot, editor.listView);
+         fListView = new JListFixture(window.robot, editor.getListView());
          fEditView = new JPanelFixture(window.robot, editor.editView);
       }
 
@@ -528,10 +528,10 @@ public class SlideDeckEditorTest {
 
          editor.setSlideDeckListView(view);
 
-         (new JListFixture(window.robot,editor.listView)).selectItem(0);      
+         (new JListFixture(window.robot,editor.getListView())).selectItem(0);      
          assertThat(editor.editView.getSlide(), sameInstance(slide0));
 
-         (new JListFixture(window.robot,editor.listView)).selectItem(1);
+         (new JListFixture(window.robot,editor.getListView())).selectItem(1);
          assertThat(editor.editView.getSlide(), sameInstance(slide1));
          
         }

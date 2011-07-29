@@ -529,7 +529,19 @@ class StepEditView extends SlideEditView {
       Canvas(){
          setOpaque(true);
          setBackground(Color.white);
-         //setBorder(BorderFactory.createLineBorder(new Color(0.4f,0.4f,0.4f)));
+         setFocusedStyle(false);
+      }
+      
+      void setBorderColor(Color color){
+         setBorder(BorderFactory.createLineBorder(color));
+      }
+      
+      void setFocusedStyle(boolean isFocused){
+         if (isFocused){
+            setBorderColor(new Color(0.3f,0.3f,0.3f));
+         }else{
+            setBorderColor(new Color(0.8f,0.8f,0.8f));
+         }
       }
    }
 
@@ -567,13 +579,13 @@ class StepEditView extends SlideEditView {
 
          @Override
          public void focusGained(FocusEvent e) {
-            canvas.setBorder(BorderFactory.createLineBorder(new Color(0.3f,0.3f,0.3f)));
+            canvas.setFocusedStyle(true);
             StepEditView.this.repaint();
          }
 
          @Override
          public void focusLost(FocusEvent e) {
-            canvas.setBorder(BorderFactory.createLineBorder(new Color(0.8f,0.8f,0.8f)));
+            canvas.setFocusedStyle(false);
             StepEditView.this.repaint();
          }
          

@@ -17,6 +17,40 @@ import org.sikuli.ui.SlideDeckEditor;
 
 class StoryEditorKit {
 
+   
+   static class EditAction extends AbstractAction{
+      
+      final static String NEW = "new";
+      
+      EditAction(String s){
+         super(s);
+      }
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+         if (e.getSource() instanceof StoryEditor){
+            StoryEditor editor = (StoryEditor) e.getSource();
+         
+            Step step = editor.selectionTool.getSelected();
+            int index = editor.selectionTool.getSelectedIndex();
+            Step newStep = new Step();
+            editor.getStory().insertElementAt(newStep, index+1);
+            //Step editorStep.s>
+         
+         }
+         
+      }
+      
+   }
+   
+   static Action insertNewStepAction = new EditAction("Insert New"){
+      {
+         putValue(Action.NAME, "insertNewStepAction");
+         putValue(Action.ACTION_COMMAND_KEY, NEW);
+      }
+
+   };
+      
    static class PlayAction extends AbstractAction{
 
       final static String CURRENT = "current";
@@ -94,6 +128,11 @@ public class StoryEditor extends SlideDeckEditor implements BundleableDocumentOw
 
       map.put(StoryEditorKit.playCurrentStepAction.getValue(Action.NAME), StoryEditorKit.playCurrentStepAction);
       imap.put(KeyStroke.getKeyStroke("meta R"), StoryEditorKit.playCurrentStepAction.getValue(Action.NAME));
+      
+      
+      map.put(StoryEditorKit.insertNewStepAction.getValue(Action.NAME), StoryEditorKit.insertNewStepAction);
+      imap.put(KeyStroke.getKeyStroke("meta N"), StoryEditorKit.insertNewStepAction.getValue(Action.NAME));
+
             
       map.put(bps.getLoadAction().getValue(Action.NAME), bps.getLoadAction());
       imap.put(KeyStroke.getKeyStroke("meta O"), bps.getLoadAction().getValue(Action.NAME));
@@ -101,6 +140,19 @@ public class StoryEditor extends SlideDeckEditor implements BundleableDocumentOw
       imap.put(KeyStroke.getKeyStroke("meta S"), bps.getSaveAction().getValue(Action.NAME));
    }
 
+   SelectionTool<Step> selectionTool = new SelectionTool<Step>();
+   class SelectionTool<T>{
+            
+      T getSelected(){
+         return (T) getListView().getSelectedValue();         
+      }
+
+      public int getSelectedIndex() {
+         return getListView().getSelectedIndex();
+
+      }
+      
+   }
 
    @Override
    public BundleableDocument getBundleableDocument() {
