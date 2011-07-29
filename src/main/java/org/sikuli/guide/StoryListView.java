@@ -19,7 +19,7 @@ import net.miginfocom.swing.MigLayout;
 
 public class StoryListView extends SlideDeckListView {
    
-   class MyCellRenderer extends JPanel implements ListCellRenderer {
+   class StepCellRenderer extends JPanel implements ListCellRenderer {
       // final static ImageIcon longIcon = new ImageIcon("long.gif");
       // final static ImageIcon shortIcon = new ImageIcon("short.gif");
 
@@ -28,22 +28,25 @@ public class StoryListView extends SlideDeckListView {
 
       StepThumbView _stepView = new StepThumbView();
       JLabel _indexLabel = new JLabel();
+      JPanel wrapper = new JPanel();   // paint border color for thumbview
 
-      MyCellRenderer(){         
-         setLayout(new MigLayout("","[center]"));
+      StepCellRenderer(){         
+         setLayout(new MigLayout("insets 0"));
          setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 
-         _stepView.setPreferredSize(new Dimension(100,100));
-
-//         GridBagConstraints c = new GridBagConstraints();
-//         c.anchor = GridBagConstraints.CENTER;
-         add(_stepView, "wrap");
-         add(_indexLabel);
+         _indexLabel.setOpaque(false);
+         _indexLabel.setBackground(null);
          
-//         c = new GridBagConstraints();
-//         c.anchor = GridBagConstraints.BASELINE_LEADING;
-//         add(new JLabel("Test"),c);
-         //validate();
+         wrapper = new JPanel();
+         wrapper.setLayout(new MigLayout("insets 2"));
+         _stepView.setPreferredSize(new Dimension(100,100));
+         _stepView.setOpaque(true);
+         _stepView.setBackground(Color.white);
+         wrapper.add(_stepView, "dock center");
+         
+         add(_indexLabel);
+         add(wrapper, "dock center");
+         
       }
 
       public Component getListCellRendererComponent(
@@ -60,15 +63,33 @@ public class StoryListView extends SlideDeckListView {
          setPreferredSize(new Dimension(120,120));
          _indexLabel.setText(""+(index+1));
          
+         // cf: http://www.w3schools.com/tags/ref_color_tryit.asp
+         Color lightYellow = new Color(255,255,224);
+         Color saddleBrown = new Color(139,69,19);
+         Color gold = new Color(255,215,0);
+         
+         
+         wrapper.setBackground(new Color(0.7f,0.7f,0.7f));
+         
          if (isSelected){
-            setBorder(BorderFactory.createLineBorder(Color.red, 5));
+
+            setBackground(gold);
+            setBorder(BorderFactory.createMatteBorder(3,10,3,10,gold));
+   
+            if (cellHasFocus){
+               wrapper.setBackground(gold.darker());
+            }
+               
          }else{
-            setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+            setBackground(null);
+            setBorder(BorderFactory.createEmptyBorder(3,10,3,10));
          }
+         
+         
 
          return this;
+         
       }
-
 
    }
 
@@ -121,8 +142,8 @@ public class StoryListView extends SlideDeckListView {
   // Story _story;
    StoryListView(){
       setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-      setCellRenderer(new MyCellRenderer());
-      setCellRenderer(new MyCellRenderer());
+      setCellRenderer(new StepCellRenderer());
+      setCellRenderer(new StepCellRenderer());
    }
    
 //   void updateStory(){      

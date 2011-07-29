@@ -69,17 +69,12 @@ class StepThumbView extends JPanel {
    
    StepThumbView(){
       setLayout(null);      
-      // It turns out these are useful after all
-      // so that it works on Windows
       setBackground(null);  
    }
    
    StepThumbView(Step step){
       setLayout(null);      
-      // It turns out these are useful after all
-      // so that it works on Windows
-      setBackground(null);
-      
+      setBackground(null);      
       _step = step;
       updateStep();
    }
