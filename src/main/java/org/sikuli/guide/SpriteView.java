@@ -563,6 +563,7 @@ class SpriteView extends JPanel implements PropertyChangeListener {
 
    public void setOffset(Point offset) {
       this.offset = offset;
+      updateBounds();
    }
 
    public Point getOffset() {

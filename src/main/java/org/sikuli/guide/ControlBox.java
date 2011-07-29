@@ -154,9 +154,11 @@ class ControlBoxView extends SpriteView {
 
          updateControlPoints();
 
-
-         Rectangle bounds = new Rectangle(getBounds());
+         Rectangle bounds = new Rectangle(rect);
          bounds.grow(-10,-10);
+         
+         bounds.x -= getOffset().x;
+         bounds.y -= getOffset().y;
 
          targetSprite.setX(bounds.x);
          targetSprite.setY(bounds.y);
@@ -169,7 +171,7 @@ class ControlBoxView extends SpriteView {
 
    }
    
-   boolean isAspectRatioPreserving = true;
+   boolean isAspectRatioPreserving = false;
 
 
    class ControlPoint extends JComponent{
@@ -241,11 +243,6 @@ class ControlBoxView extends SpriteView {
    void updateTarget(){
 
       Rectangle r = getBounds();
-
-
-      //super.update();      
-      
-      
       Sprite target = ((ControlBox) getModel()).getTarget();
       
       if (target == null)
@@ -260,19 +257,11 @@ class ControlBoxView extends SpriteView {
       updateControlPoints();
 
       r.add(getBounds());
-      //repaint();
-//      if (getParent() != null){
-//        // getParent().repaint(r.x,r.y,r.width,r.height);
-//        // getParent().repaint();
-//         
-//      }
       
       if (getTopLevelAncestor() != null){
          // getParent().repaint(r.x,r.y,r.width,r.height);
          getTopLevelAncestor().repaint();
-
       }
-
 
    }
 

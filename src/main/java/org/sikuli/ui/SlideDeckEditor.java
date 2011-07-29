@@ -1,6 +1,7 @@
 package org.sikuli.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
@@ -49,11 +50,13 @@ public class SlideDeckEditor extends JPanel {
       RightPanel(){
          setLayout(new MigLayout("insets 0"));
          //add(scrollPane);
+         setBackground(Color.red);
       }
       
       void setComponent(JComponent comp){
          removeAll();
-         add(comp);//scrollPane.setViewportView(comp);
+         add(comp, "dock center");//scrollPane.setViewportView(comp);
+         validate();
       }
       
    }
