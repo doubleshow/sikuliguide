@@ -15,13 +15,17 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ActionMap;
@@ -46,6 +50,7 @@ import static com.google.common.collect.Iterables.*;
 import static com.google.common.collect.Lists.*;
 
 import org.sikuli.ui.Slide;
+import org.sikuli.ui.SlideEditView;
 
 import com.google.common.base.Predicate;
 
@@ -188,6 +193,65 @@ class StepEditKit {
       }
    };
 
+   static class ImportContentImageAction extends AbstractAction {
+      
+      final static String FILE = "file";
+      
+      ImportContentImageAction(String s){
+         super(s);
+      }
+      
+      
+      private void scaleToFitCanvasSize(ContextImage contextImage, Dimension canvasSize){
+         float scalex = 1f * contextImage.getOriginalWidth() / canvasSize.width;
+         float scaley = 1f * contextImage.getOriginalHeight() / canvasSize.height;
+
+         boolean isContextImageLargerThanCanvas = scalex > 1 || scaley > 1; 
+            
+         if (isContextImageLargerThanCanvas){
+            
+            float largerScale = Math.max(scalex, scaley);
+            
+            int width  = (int) (contextImage.getOriginalWidth() / largerScale);
+            int height = (int) (contextImage.getOriginalHeight() / largerScale);
+            
+            contextImage.setWidth(width);
+            contextImage.setHeight(height);
+         }
+      }
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+         StepEditView editView = (StepEditView) e.getSource();
+         try {
+            //BufferedImage image = ImageIO.read(new File("large.png"));
+            
+            ContextImage contextImage = new DefaultContextImage(new File("large.png"));            
+            
+            
+            Dimension canvasSize = new Dimension(640,480);
+            scaleToFitCanvasSize(contextImage, canvasSize);
+            
+            
+            Step step = editView.getStep();
+            step.addSprite(contextImage);
+            
+            
+         } catch (IOException ignored) {
+         }
+         
+      }
+      
+   }
+   
+   static Action importContextImageFromFileAction = new ImportContentImageAction("Import Context Image"){
+      { 
+         putValue(Action.NAME, "importContextImageFromFileAction");
+         putValue(Action.ACTION_COMMAND_KEY, FILE);         
+      }
+   };
+
+   
    static class InsertSpriteAction extends AbstractAction {
 
       final static String TARGET = "target";
@@ -205,14 +269,18 @@ class StepEditKit {
 
          Point location = MouseInfo.getPointerInfo().getLocation();
          Point origin = editView.getLocationOnScreen();
-         final int x = location.x - origin.x;
-         final int y = location.y - origin.y;
+         int x = location.x - origin.x;
+         int y = location.y - origin.y;
 
          // skip if the insertion point is not within the 
          // visible area of the edit view
          if (!editView.getVisibleRect().contains(x,y)){
             return;         
          }
+         
+         // convert to location relative to the canvas
+         x -= editView.canvas.getLocation().x;
+         y -= editView.canvas.getLocation().y;
 
          Sprite sprite = null;
          if (e.getActionCommand().equals(TARGET)){       
@@ -326,10 +394,11 @@ class StepEditKit {
    };   
 }
 
-class StepEditView extends StepView {
+class StepEditView extends SlideEditView {
 
-   //SpriteView selectedSpriteView;
-
+   Canvas canvas = new Canvas();
+   JPanel contentLayer = new JPanel();
+   JPanel contextLayer = new JPanel();
    JPanel controlLayer = new JPanel();
    JPanel editLayer = new JPanel();
 
@@ -337,6 +406,15 @@ class StepEditView extends StepView {
    SelectionTool selectionTool = new SelectionTool();
    MoveTool moveTool = new MoveTool();
    EditTool editTool = new EditTool();  
+   
+   Step _step;   
+//   @Override
+//   public void setSlide(Slide slide) {
+//      super.setSlide(slide);
+//      _step = (Step) slide;
+//      validate();
+//   }
+
 
    private void initActionInputMaps(){
       ActionMap map = getActionMap();
@@ -355,6 +433,8 @@ class StepEditView extends StepView {
       imap.put(KeyStroke.getKeyStroke("LEFT"), StepEditKit.moveSelectedSpritesLeftAction.getValue(Action.NAME));
       imap.put(KeyStroke.getKeyStroke("RIGHT"), StepEditKit.moveSelectedSpritesRightAction.getValue(Action.NAME));
 
+      map.put(StepEditKit.importContextImageFromFileAction.getValue(Action.NAME), StepEditKit.importContextImageFromFileAction);
+      imap.put(KeyStroke.getKeyStroke("meta I"), StepEditKit.importContextImageFromFileAction.getValue(Action.NAME));
 
       map.put(StepEditKit.linkSelectedSpritesAction.getValue(Action.NAME), StepEditKit.linkSelectedSpritesAction);
       imap.put(KeyStroke.getKeyStroke("meta L"), StepEditKit.linkSelectedSpritesAction.getValue(Action.NAME));
@@ -408,6 +488,8 @@ class StepEditView extends StepView {
 
       initComponents();
 
+      setLayout(null);      
+      setBackground(null);  
       setPreferredSize(new Dimension(800,600));
 
       setFocusable(true);
@@ -423,14 +505,8 @@ class StepEditView extends StepView {
 
    }
 
-   @Override
    void initComponents() {
-      super.initComponents();
       
-      remove(contentLayer);
-      remove(contextLayer);
-
-      Canvas canvas = new Canvas();
       canvas.setSize(640,480);
       canvas.setLocation(40,40);
       
@@ -457,7 +533,7 @@ class StepEditView extends StepView {
       add(editLayer,0);      
       
       relationshipGroupView.setSize(editLayer.getSize());
-      editLayer.add(relationshipGroupView);
+      editLayer.add(relationshipGroupView);           
    }
 
    private void addListenerToSprite(SpriteView spriteView){
@@ -488,23 +564,71 @@ class StepEditView extends StepView {
    @Override
    public void setSlide(Slide slide){
       super.setSlide(slide);
+      _step = (Step) slide;
+      refresh();
+      
       addListenersToSprites();
       selectionTool.setListModel(_step._spriteList);
       selectionTool.clearSelection();
+      validate();
    }
 
-   @Override
-   public void setStep(Step step) {
-      super.setStep(step);
+   public Step getStep(){
+      return _step;
+   }
+   
+   private void updateStep(){
+      contextLayer.removeAll();
+      contentLayer.removeAll();
+      spriteToSpriteView.clear();
+
+      if (_step == null)
+         return;
+      
+      for (Sprite sprite : _step.getSprites()){       
+         
+         SpriteView view = ViewFactory.createView(sprite);
+         
+         view.setOffset(canvas.getLocation());
+         view.updateBounds();
+         
+         if (sprite instanceof ContextImage){
+            //ContextImage contextImage = (ContextImage) sprite;
+            //view.setLocation(contextImage.getX(),contextImage.getY());
+            contextLayer.add(view);
+         }else{
+            contentLayer.add(view,0);
+         }
+                  
+         spriteToSpriteView.put(sprite, view);
+      }   
+      
+      
+      
+      for (Relationship relationship : _step.getRelationships()){
+         relationship.update(null);
+      }
+      
       addListenersToSprites();
+
+      repaint();
+   }
+   
+   public void setStep(Step step) {
+      _step = step;
+      setSlide(step);
+      updateStep();
+
+//      addListenersToSprites();
       selectionTool.setListModel(_step._spriteList);
       selectionTool.clearSelection();
+      validate();
    }
 
    @Override
    public void refresh(){
       super.refresh();
-      addListenersToSprites();
+      updateStep();
    }
 
 
@@ -625,7 +749,8 @@ class StepEditView extends StepView {
 
             Rectangle bounds = null;
             for (Sprite s : sprites){
-               Rectangle b = new Rectangle(s.getX(), s.getY(), s.getWidth(), s.getHeight());               
+               Rectangle b = getSpriteView(s).getBounds();// Rectangle(s.getX(), s.getY(), s.getWidth(), s.getHeight());
+               
                if (bounds == null)
                   bounds = b;
                else
@@ -634,7 +759,7 @@ class StepEditView extends StepView {
                // also each sprite's dependents
                List<Sprite> dependents = getStep().getDependentsOf(s);
                for (Sprite d : dependents){
-                  bounds.add(((DefaultSprite) d).getBounds());
+                  bounds.add(getSpriteView(d).getBounds());
                }
 
             }            
@@ -643,12 +768,19 @@ class StepEditView extends StepView {
                setBounds(bounds);
 
             Point o = bounds.getLocation();
-
+            Point loc = canvas.getLocation();
+            
             // add views
             removeAll();
             for (Sprite s : sprites){
                SpriteView v = ViewFactory.createView(s);
-               v.setOffset(new Point(-o.x,-o.y));
+               
+               Point o1;
+               o1 = new Point(-o.x,-o.y);
+               o1.x += loc.x;
+               o1.y += loc.y;
+               
+               v.setOffset(o1);
                v.updateBounds();
                v.setOpacity(0.5f);
                add(v);
@@ -657,7 +789,12 @@ class StepEditView extends StepView {
                List<Sprite> dependents = getStep().getDependentsOf(s);
                for (Sprite d : dependents){
                   v = ViewFactory.createView(d);
-                  v.setOffset(new Point(-o.x,-o.y));
+                  
+                  o1 = new Point(-o.x,-o.y);
+                  o1.x += loc.x;
+                  o1.y += loc.y;
+
+                  v.setOffset(o1);
                   v.updateBounds();
                   v.setOpacity(0.5f);
                   add(v);
@@ -718,6 +855,10 @@ class StepEditView extends StepView {
 
    }
 
+   SpriteView getSpriteView(int index){
+      Sprite sprite = _step.getSprites().get(index);
+      return getSpriteView(sprite);
+   }
 
    List<SpriteView> getSpriteViews(){
       Component[] comps = contentLayer.getComponents();
@@ -730,6 +871,11 @@ class StepEditView extends StepView {
          ret.add((SpriteView)comps[i]);
       }         
       return ret;
+   }
+   
+   Map<Sprite, SpriteView> spriteToSpriteView = new HashMap<Sprite, SpriteView>();
+   SpriteView getSpriteView(Sprite sprite){
+      return spriteToSpriteView.get(sprite);
    }
 
    
@@ -775,7 +921,8 @@ class StepEditView extends StepView {
             
             
             for (Sprite sprite : sprites){
-               Rectangle b = ((DefaultSprite) sprite).getBounds();
+               //Rectangle b = ((DefaultSprite) sprite).getBounds();
+               Rectangle b = getSpriteView(sprite).getBounds();//((DefaultSprite) sprite).getBounds();
                if (bounds == null){
                   bounds = b;
                }else{
@@ -1009,15 +1156,14 @@ class StepEditView extends StepView {
       private void select(Sprite sprite){
          int index = _step.indexOf(sprite);
          selectionList.addSelectionInterval(index,index);
+         
          ControlBox box = new ControlBox();
          ControlBoxView view = new ControlBoxView(box);
+         view.setOffset(getSpriteView(sprite).getOffset());
+         
          box.setTarget(sprite);
          controlLayer.add(view);
          
-         //relationshipGroupView.clear();
-         //relationshipGroupView.add(sprite);
-         //relationshipGroupView.setVisible(true);
-
          view.setVisible(true);
          view.repaint();
       }
@@ -1027,16 +1173,6 @@ class StepEditView extends StepView {
       }
 
 
-      SpriteView getSpriteView(int index){
-         Sprite sprite = _step.getSprites().get(index);
-         for (SpriteView view : getSpriteViews()){
-            if (view.getSprite().equals(sprite)){
-               return view;
-            }            
-         }
-         return null;
-      }
-
       SpriteView getSelectedSpriteView() {
          int index = selectionList.getSelectedIndex();
          return getSpriteView(index);
@@ -1044,6 +1180,7 @@ class StepEditView extends StepView {
 
 
    }
+
 
 
    ActionFactory actionFactory = new ActionFactory();

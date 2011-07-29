@@ -58,15 +58,17 @@ public class Bundler {
          
          prepareBundlePathToSave();            
          clearBundle();
-         source.writeToBundle(bundlePath);
+         source.writeToBundle(_bundlePath);
          for (Bundleable b : source.getBundleables()){
             b.writeToBundle(getBundlePath());            
          }
       }
 
       void open(BundleableDocument source) throws Exception {
-         if (chooseBundlePathToOpen() == null)
+         File bundlePath = chooseBundlePathToOpen();
+         if (bundlePath == null)
             return;  // user cancel
+         setBundlePath(bundlePath);
          source.readFromBundle(bundlePath);
          for (Bundleable b : source.getBundleables()){
             b.readFromBundle(getBundlePath());            
@@ -94,12 +96,12 @@ public class Bundler {
       };
    }
 
-   File bundlePath;   
+   File _bundlePath;   
    File getBundlePath(){
-      return bundlePath;
+      return _bundlePath;
    }
    void setBundlePath(File bundlePath){
-      this.bundlePath = bundlePath;
+      this._bundlePath = bundlePath;
    }
    
    

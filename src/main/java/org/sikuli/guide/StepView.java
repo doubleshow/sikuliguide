@@ -114,19 +114,7 @@ public class StepView extends SlideEditView {
       for (Relationship relationship : _step.getRelationships()){
          relationship.update(null);
       }
-
       
-//      //System.out.println("StepView:updateStep: adding " + _step.getSprites().size() + " steps");
-//      for (Sprite sprite : _step.getSprites()){       
-//         SpriteView view = ViewFactory.createView(sprite);
-//        // System.out.println(sprite.getClass() + " : " + sprite);         
-//         contentLayer.add(view,0); 
-//      }      
-      
-//      ContextImage contextImage = _step.getContextImage();
-//      ContextImageView view = ViewFactory.createView(_step.getContextImage());
-//      view.setLocation(contextImage.getX(),contextImage.getY());
-//      contentLayer.add(view);
       repaint(); 
    }
    
@@ -148,10 +136,8 @@ public class StepView extends SlideEditView {
       super.setSlide(slide);
       _step = (Step) slide;
       refresh();
+      validate();
    }
-
-
-   
    
    void initComponents(){
       contentLayer.setLayout(null);

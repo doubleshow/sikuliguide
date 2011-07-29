@@ -252,6 +252,9 @@ class ControlBoxView extends SpriteView {
          return;
       
       Rectangle rnew = new Rectangle(target.getX(), target.getY(), target.getWidth(), target.getHeight());
+      rnew.x += getOffset().x;
+      rnew.y += getOffset().y;
+      
       rnew.grow(10,10);
       setBounds(rnew);
       updateControlPoints();

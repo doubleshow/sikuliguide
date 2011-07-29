@@ -21,7 +21,24 @@ import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Validate;
 
 abstract class ContextImage extends DefaultSprite implements Bundleable{   
-   abstract BufferedImage getBufferedImage();  
+   abstract BufferedImage getBufferedImage();
+   @Attribute
+   private int originalWidth;
+   @Attribute
+   private int originalHeight;
+
+   public void setOriginalWidth(int originalWidth) {
+      this.originalWidth = originalWidth;
+   }
+   public int getOriginalWidth() {
+      return originalWidth;
+   }
+   public void setOriginalHeight(int originalHeight) {
+      this.originalHeight = originalHeight;
+   }
+   public int getOriginalHeight() {
+      return originalHeight;
+   }
 }
 
 class ContextImageView extends SpriteView {
@@ -61,30 +78,10 @@ class ContextImageView extends SpriteView {
 @Root
 class DefaultContextImage extends ContextImage 
    implements Serializable, Bundleable {
-   
-   
+      
    float getAspectRatio(){
       return 1f * getBufferedImage().getHeight()/getBufferedImage().getWidth();
    }
-//   // aspect ratio respecting
-//   @Override
-//   public void setHeight(int height) {
-//      if (height == getHeight())
-//         return;
-//      float aspectRatio = 1f * getWidth()/getHeight();
-//      int width = (int) (height * aspectRatio);
-//      super.setHeight(height);
-//      super.setWidth(width);
-//   }
-//   @Override
-//   public void setWidth(int width) {
-//      if (width == getWidth())
-//         return;
-//      float aspectRatio = 1f * getWidth()/getHeight();
-//      int height = (int) (width / aspectRatio);      
-//      super.setHeight(height);
-//      super.setWidth(width);
-//   }
 
    transient BufferedImage image = null;   
    SerializableBufferedImage serializableImage;
@@ -99,21 +96,11 @@ class DefaultContextImage extends ContextImage
       this.imageId = imageId;
    }
    
-//   @Validate
-//   void validate(){
-//      System.out.println("validing");
-//      if (imageId.isEmpty())
-//         imageId = UUID.randomUUID().toString();
-//   }
-   
    String getImageFilename(){
       return "image-" + getImageId() + ".png";
    }
-   
-   
-   
-   
-//   @Override
+
+   //   @Override
 //   // TODO: implement the correct behavior
    public boolean isDirty() {
       return true;
@@ -139,26 +126,14 @@ class DefaultContextImage extends ContextImage
       image = ImageIO.read(file);
       serializableImage = new SerializableBufferedImage(image);
       imageId = UUID.randomUUID().toString();
-      super.setWidth(image.getWidth());
-      super.setHeight(image.getHeight());
+      setWidth(image.getWidth());
+      setHeight(image.getHeight());
+      setOriginalWidth(image.getWidth());
+      setOriginalHeight(image.getHeight());
    }
    
    DefaultContextImage(){      
    }
-   
-//   public int getWidth(){
-//      if (getBufferedImage() == null)
-//         return super.getWidth();
-//      else
-//         return getBufferedImage().getWidth();
-//   }
-//   
-//   public int getHeight(){
-//      if (getBufferedImage() == null)
-//         return super.getHeight();
-//      else      
-//      return getBufferedImage().getHeight();
-//   }
    
    public BufferedImage getBufferedImage(){
       if (image == null && serializableImage != null)
