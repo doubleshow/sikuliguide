@@ -81,7 +81,6 @@ public class SlideDeckEditor extends JPanel {
    protected void setSelectedSlideIndex(int index) {
       if (index >= 0 && index < getSlideDeck().getSize()){
          editView.setSlide((Slide)getSlideDeck().getElementAt(index));
-//         listView.setSelectedIndex(index);
          listView.ensureIndexIsVisible(index);
       }else{
          editView.setSlide(null);

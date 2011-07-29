@@ -61,12 +61,17 @@ public class StoryEditor extends SlideDeckEditor implements BundleableDocumentOw
       initActionInputMap();
       setFocusable(true);
       
-      
+      setStory(new Story());
+          
 
       StoryListView listView = new StoryListView();
       setSlideDeckListView(listView);
       listView.setTransferHandler(new SpriteTransferHandler());
 
+      StepEditView editView = new StepEditView();      
+      setSlideEditView(editView);
+
+      editView.requestFocus();
    }
    
    

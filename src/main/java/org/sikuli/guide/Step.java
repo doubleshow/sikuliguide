@@ -194,4 +194,14 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
       return aList;
    }
 
+   public <T> List<T> getSpritesOfClass(Class<? extends T> type) {
+      List<T> list = new ArrayList<T>();
+      for (Sprite sprite : getSprites()){
+         if (type.isInstance(sprite)){
+            list.add((T) sprite);
+         }
+      }
+      return list;
+   }
+
 }

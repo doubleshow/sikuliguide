@@ -93,7 +93,7 @@ public class StoryEditorTestCase {
 
          editor.setStory(story);
 
-         editor.setSlideEditView(new StepEditView());
+     
 
 
          window = new FrameFixture(frame);

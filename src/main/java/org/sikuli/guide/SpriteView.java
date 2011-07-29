@@ -35,6 +35,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import javax.swing.TransferHandler.TransferSupport;
 
+import org.sikuli.guide.SpriteTransferHandler.ArrayListTransferable;
+import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
@@ -187,8 +189,11 @@ class SpriteTransferHandler extends TransferHandler{
 //         if (sprites.size() == 1){
 //            return new SpriteTransferable(copy);            
 //         }else{
-            return new ArrayListTransferable<Sprite>(sprites);            
-//         }
+            
+          ArrayListTransferable<Sprite> a = new ArrayListTransferable<Sprite>(sprites);
+          //a.bundlePath = editView.
+          return a;
+
       }
       return null;
    }
@@ -298,7 +303,7 @@ class SpriteTransferHandler extends TransferHandler{
                spritesToPaste.add(copy);
             }
             
-            stepView.spritesPasted(spritesToPaste);
+            stepView.copyCutPasteTool.pasteSprites(spritesToPaste);
             
          } catch (UnsupportedFlavorException e) {
             e.printStackTrace();
@@ -320,10 +325,7 @@ class SpriteTransferHandler extends TransferHandler{
          
          if (action == MOVE && !alreadyCut){
          
-            for (SpriteView spriteView : stepView.selectionTool.getSelectedSpriteViews()){
-               Sprite sprite = spriteView.getSprite();
-               stepView.spriteCut(sprite);
-            }
+            stepView.copyCutPasteTool.cutSprites(stepView.selectionTool.getSelectedSprites());
 
             alreadyCut = true;
             // purposely shifted so it would be added to the old location
@@ -346,6 +348,8 @@ class SpriteTransferHandler extends TransferHandler{
       @ElementList
       List<T> data;
 
+      @Attribute
+      String bundlePath="";
       
       public ArrayListTransferable(){         
       }
@@ -468,7 +472,7 @@ class SpriteView extends JPanel implements PropertyChangeListener {
       //setFocusable(true);
       //setDragEnabled(true);
       
-//      setTransferHandler(new SpriteTransferHandler());
+      //setTransferHandler(new SpriteTransferHandler());
    }
 
    // Update the view based on the current attributes of the associated model

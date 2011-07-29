@@ -171,7 +171,7 @@ class ControlBoxView extends SpriteView {
 
    }
    
-   boolean isAspectRatioPreserving = false;
+   boolean isAspectRatioPreserving = true;
 
 
    class ControlPoint extends JComponent{
@@ -219,9 +219,10 @@ class ControlBoxView extends SpriteView {
    ControlPoint tl,bl,tr,br;
    ConnectControlPoint ctl,cbl,ctr,cbr;
    ControlBox _controlBox;
-   public ControlBoxView(ControlBox controlBox)  {
-      super(controlBox);
-      _controlBox = controlBox;
+   public ControlBoxView()  {      
+      super(new ControlBox());
+      
+      _controlBox = (ControlBox) getSprite();
 
       setLayout(null);
       setOpaque(false);
@@ -299,6 +300,10 @@ class ControlBoxView extends SpriteView {
       Graphics2D g2d = (Graphics2D) g;      
       g2d.setColor(new Color(1f,1f,1f,0.5f));
       g2d.drawRect(5,5,getWidth()-11,getHeight()-11);
+   }
+
+   public void setTarget(Sprite sprite) {
+      _controlBox.setTarget(sprite);      
    }
 
 }

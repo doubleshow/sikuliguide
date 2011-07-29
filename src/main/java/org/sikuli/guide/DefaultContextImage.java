@@ -38,53 +38,8 @@ abstract class ContextImage extends DefaultSprite implements Bundleable{
    }
    public int getOriginalHeight() {
       return originalHeight;
-   }
-}
+   }      
 
-class ContextImageView extends SpriteView {
-   
-   ContextImageView(ContextImage contextImage){
-      super(contextImage);
-      setLayout(null);
-      
-//      JLabel label = new JLabel();
-//      BufferedImage b = contextImage.getBufferedImage();
-//      if (b == null){
-//         return;
-//      }
-//      
-//      ImageIcon icon = new ImageIcon(b);
-//      label.setIcon(icon);
-//      label.setSize(new Dimension(b.getWidth(), b.getHeight()));
-//      label.setLocation(0,0);
-//      setName("ContextImage");
-//      add(label);
-      //setSize(label.getSize());
-   }
-   
-   ContextImage getContextImage(){
-      return (ContextImage) _sprite;
-   }
-   
-   @Override
-   public void paintComponent(Graphics g){
-      Graphics2D g2d = (Graphics2D) g;      
-      ContextImage c = getContextImage();
-      g2d.drawImage(c.getBufferedImage(), 0, 0, c.getWidth(), c.getHeight(), null);      
-      
-   }   
-}
-
-@Root
-class DefaultContextImage extends ContextImage 
-   implements Serializable, Bundleable {
-      
-   float getAspectRatio(){
-      return 1f * getBufferedImage().getHeight()/getBufferedImage().getWidth();
-   }
-
-   transient BufferedImage image = null;   
-   SerializableBufferedImage serializableImage;
 
    @Attribute
    String imageId = "";
@@ -95,24 +50,72 @@ class DefaultContextImage extends ContextImage
    public void setImageId(String imageId){
       this.imageId = imageId;
    }
-   
+}
+
+class ContextImageView extends SpriteView {
+
+   ContextImageView(ContextImage contextImage){
+      super(contextImage);
+      setLayout(null);
+
+      //      JLabel label = new JLabel();
+      //      BufferedImage b = contextImage.getBufferedImage();
+      //      if (b == null){
+      //         return;
+      //      }
+      //      
+      //      ImageIcon icon = new ImageIcon(b);
+      //      label.setIcon(icon);
+      //      label.setSize(new Dimension(b.getWidth(), b.getHeight()));
+      //      label.setLocation(0,0);
+      //      setName("ContextImage");
+      //      add(label);
+      //setSize(label.getSize());
+   }
+
+   ContextImage getContextImage(){
+      return (ContextImage) _sprite;
+   }
+
+   @Override
+   public void paintComponent(Graphics g){
+      Graphics2D g2d = (Graphics2D) g;      
+      ContextImage c = getContextImage();
+      g2d.drawImage(c.getBufferedImage(), 0, 0, c.getWidth(), c.getHeight(), null);      
+
+   }   
+}
+
+@Root
+class DefaultContextImage extends ContextImage 
+implements Serializable, Bundleable {
+
+   float getAspectRatio(){
+      return 1f * getBufferedImage().getHeight()/getBufferedImage().getWidth();
+   }
+
+   transient BufferedImage image = null;   
+   SerializableBufferedImage serializableImage;
+
+
+
    String getImageFilename(){
       return "image-" + getImageId() + ".png";
    }
 
    //   @Override
-//   // TODO: implement the correct behavior
+   //   // TODO: implement the correct behavior
    public boolean isDirty() {
       return true;
    }
-   
+
    @Override
    public void writeToBundle(File bundlePath) throws IOException{
       File file = new File(bundlePath, getImageFilename());
       if (isDirty() && !file.exists())     
          ImageIO.write(getBufferedImage(), "png", file);
    }
-   
+
    @Override
    public void readFromBundle(File bundlePath) throws IOException{
       File file = new File(bundlePath, getImageFilename());
@@ -121,7 +124,7 @@ class DefaultContextImage extends ContextImage
       image = ImageIO.read(file);
       serializableImage = new SerializableBufferedImage(image);
    }
-   
+
    DefaultContextImage(File file) throws IOException{      
       image = ImageIO.read(file);
       serializableImage = new SerializableBufferedImage(image);
@@ -131,10 +134,10 @@ class DefaultContextImage extends ContextImage
       setOriginalWidth(image.getWidth());
       setOriginalHeight(image.getHeight());
    }
-   
+
    DefaultContextImage(){      
    }
-   
+
    public BufferedImage getBufferedImage(){
       if (image == null && serializableImage != null)
          image = serializableImage.getBufferedImage(); 
@@ -145,17 +148,17 @@ class DefaultContextImage extends ContextImage
 
 
 class SerializableBufferedImage implements Serializable {
-   
+
    private byte[] byteImage = null;
- 
+
    public SerializableBufferedImage(BufferedImage bufferedImage) {
       this.byteImage = toByteArray(bufferedImage);
    }
- 
+
    public BufferedImage getBufferedImage() {
       return fromByteArray(byteImage);
    }
- 
+
    private BufferedImage fromByteArray(byte[] imagebytes) {
       try {
          if (imagebytes != null && (imagebytes.length > 0)) {
@@ -167,7 +170,7 @@ class SerializableBufferedImage implements Serializable {
          throw new IllegalArgumentException(e.toString());
       }
    }
- 
+
    private byte[] toByteArray(BufferedImage bufferedImage) {
       if (bufferedImage != null) {
          BufferedImage image = bufferedImage;

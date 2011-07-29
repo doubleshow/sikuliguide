@@ -117,7 +117,18 @@ implements PropertyChangeListener, BundleableDocument {
       }
       return list;
    }
-
+   
+   // return the context image with the given imageId or null if such contextimage doesnot exist
+   public ContextImage getContextImage(String imageId){
+      for (Step step : getSteps()){         
+         for (ContextImage contextImage : step.getSpritesOfClass(ContextImage.class)){
+            if (contextImage.getImageId().equals(imageId)){
+               return contextImage;
+            }
+         }         
+      }    
+      return null;
+   }
 
    Bundleable bundlealeAdapter = new XMLBundleableAdapter(this);   
    @Override
