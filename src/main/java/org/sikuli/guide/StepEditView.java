@@ -16,7 +16,6 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -1295,38 +1294,46 @@ class StepEditView extends SlideEditView {
    
    class CopyCutPasteTool{
       
-      List<ContextImage> cutContextImages = new ArrayList<ContextImage>();
+
+      List<ContextImage> cachedContextImages = new ArrayList<ContextImage>();
+            
+      private boolean loadBufferedImageFromExistingImages(DefaultContextImage contextImage){
+         Story story = getStory();
+         
+         ContextImage existingImageWithSameImageId = null;
+         
+         existingImageWithSameImageId = story.getContextImage(contextImage.getImageId());
+
+         if (existingImageWithSameImageId == null){            
+            
+            for (ContextImage cutContextImage : cachedContextImages){
+               boolean isCutContextImageSameAsPasteContextImage = cutContextImage.getImageId().equals(contextImage.getImageId());  
+               if (isCutContextImageSameAsPasteContextImage){
+                  existingImageWithSameImageId = cutContextImage;
+                  break;
+               }                  
+            }                 
+         }
+
+         if (existingImageWithSameImageId != null){
+            contextImage.image = existingImageWithSameImageId.getBufferedImage();
+            return true;
+         }else
+            return false;
+      }
+    
       
-      public void pasteSprites(List<Sprite> listSpriteToPaste) {
+      void pasteSprites(List<Sprite> listSpriteToPaste) {
          selectionTool.clearSelection();
          for (Sprite spriteToPaste : listSpriteToPaste){
 
-            // before adding to the story, let's find whether there's already a context image
-            // with the same image id
             if (spriteToPaste instanceof DefaultContextImage){
                DefaultContextImage contextImageToPaste = (DefaultContextImage) spriteToPaste;
-               Story story = getStory();
-               
-               ContextImage existingImageWithSameImageId = null;
-               
-               existingImageWithSameImageId = story.getContextImage(contextImageToPaste.getImageId());
 
-               if (existingImageWithSameImageId == null){            
-                  
-                  for (ContextImage cutContextImage : cutContextImages){
-                     boolean isCutContextImageSameAsPasteContextImage = cutContextImage.getImageId().equals(contextImageToPaste.getImageId());  
-                     if (isCutContextImageSameAsPasteContextImage){
-                        existingImageWithSameImageId = cutContextImage;
-                        break;
-                     }                  
-                  }                 
-               }
-
-               if (existingImageWithSameImageId != null)
-                  contextImageToPaste.image = existingImageWithSameImageId.getBufferedImage();
-               else
+               // before adding to the step, try to load the buffered image from an
+               // existing context image with the same image id
+               if (!loadBufferedImageFromExistingImages(contextImageToPaste))
                   continue;
-
             }
             
             getStep().addSprite(spriteToPaste);                  
@@ -1335,14 +1342,24 @@ class StepEditView extends SlideEditView {
          }
       }
 
+      
+      void copySprites(List<Sprite> sprites) {      
+         cachedContextImages.clear();
+         for (Sprite sprite : sprites){
+            if (sprite instanceof ContextImage){
+               cachedContextImages.add((ContextImage) sprite);
+            }      
+         }
+      }
 
-      public void cutSprites(List<Sprite> sprites) {      
-         cutContextImages.clear();
+
+      void cutSprites(List<Sprite> sprites) {      
+         cachedContextImages.clear();
          for (Sprite sprite : sprites){
             _step.removeSprite(sprite);
             selectionTool.clearSelection();
             if (sprite instanceof ContextImage){
-               cutContextImages.add((ContextImage) sprite);
+               cachedContextImages.add((ContextImage) sprite);
             }      
          }
       }

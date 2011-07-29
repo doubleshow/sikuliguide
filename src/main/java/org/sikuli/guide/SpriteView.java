@@ -185,15 +185,9 @@ class SpriteTransferHandler extends TransferHandler{
          
          
          List<Sprite> sprites = editView.selectionTool.getSelectedSprites();
-         
-//         if (sprites.size() == 1){
-//            return new SpriteTransferable(copy);            
-//         }else{
-            
+         editView.copyCutPasteTool.copySprites(sprites);
           ArrayListTransferable<Sprite> a = new ArrayListTransferable<Sprite>(sprites);
-          //a.bundlePath = editView.
           return a;
-
       }
       return null;
    }
