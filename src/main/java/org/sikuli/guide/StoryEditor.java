@@ -101,6 +101,7 @@ public class StoryEditor extends SlideDeckEditor implements BundleableDocumentOw
       StoryListView listView = new StoryListView();
       setSlideDeckListView(listView);
       listView.setTransferHandler(new SpriteTransferHandler());
+      listView.setDragEnabled(false);
 
       StepEditView editView = new StepEditView();      
       setSlideEditView(editView);

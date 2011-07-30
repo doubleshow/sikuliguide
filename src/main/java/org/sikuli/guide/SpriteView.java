@@ -343,10 +343,12 @@ class SpriteTransferHandler extends TransferHandler{
             } catch (UnsupportedFlavorException e1) {
             } catch (IOException e1) {
             } catch (Exception e) {
-            }
-                        
-            int index = listView.getSelectedIndex();
-            listView.getStory().insertElementsAt(steps, index+1);
+            }                       
+            
+            int lead = listView.getLeadSelectionIndex();
+            int anchor = listView.getAnchorSelectionIndex();
+            int insertPosition = Math.max(lead,anchor) + 1;
+            listView.getStory().insertElementsAt(steps, insertPosition);
          }else{
             return false;
          }

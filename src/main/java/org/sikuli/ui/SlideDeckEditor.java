@@ -129,6 +129,7 @@ public class SlideDeckEditor extends JPanel {
             public void run(){
                getListView().setSelectedIndex(e.getIndex0()); // this allows the editview to be selected
                getListView().addSelectionInterval(e.getIndex0(), e.getIndex1());   // this allows the added elements to be highlighted
+               getListView().ensureIndexIsVisible(e.getIndex1()); // allows the added elements to be visible
             }
          });
          
@@ -329,7 +330,7 @@ public class SlideDeckEditor extends JPanel {
 
       setListView(view);      
       
-      getListView().setDragEnabled(true);
+      //getListView().setDragEnabled(true);
       if (getSlideDeck()!=null)
          getListView().setModel(getSlideDeck());
       getListView().setMinimumSize(new Dimension(120,150));
