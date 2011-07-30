@@ -330,8 +330,6 @@ public class SlideDeckEditor extends JPanel {
       setListView(view);      
       
       getListView().setDragEnabled(true);
-      //listView.setTransferHandler(new ArrayListTransferHandler());
-      //listView.setSlideDeck(getSlideDeck());
       if (getSlideDeck()!=null)
          getListView().setModel(getSlideDeck());
       getListView().setMinimumSize(new Dimension(120,150));
@@ -347,7 +345,7 @@ public class SlideDeckEditor extends JPanel {
             if (isOnlyOneItemSelected){               
                int index = getListView().getSelectedIndex();
                editView.setSlide((Slide)getSlideDeck().getElementAt(index));
-//               System.out.println(String.format("selecting:%d",index));
+               System.out.println(String.format("selecting:%d",index));
 //               setSelectedSlideIndex(index);
             }
             

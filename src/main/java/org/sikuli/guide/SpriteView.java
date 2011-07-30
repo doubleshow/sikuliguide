@@ -186,6 +186,8 @@ class SpriteTransferHandler extends TransferHandler{
       }else if (c instanceof StoryListView){
          System.out.println("StoryListView");
          StoryListView listView = (StoryListView) c;
+         alreadyCut = false;
+
          Object[] objects = listView.getSelectedValues();
          List<Step> steps = new ArrayList<Step>();
          for (Object o : objects){
@@ -271,13 +273,15 @@ class SpriteTransferHandler extends TransferHandler{
 
          try {
             List<Sprite> sprites;
-            if (hasSerialSpriteFlavor(support.getDataFlavors())){
-               sprites = new ArrayList<Sprite>();
-               Sprite sprite = (Sprite) transferable.getTransferData(serialSpriteFlavor);
-               sprites.add(sprite);
-            }else if (hasSerialArrayListFlavor(support.getDataFlavors())){
-               sprites = (ArrayList<Sprite>) transferable.getTransferData(serialArrayListFlavor);
-            }else if (hasStringFlavor(support.getDataFlavors())){
+//            if (hasSerialSpriteFlavor(support.getDataFlavors())){
+//               sprites = new ArrayList<Sprite>();
+//               Sprite sprite = (Sprite) transferable.getTransferData(serialSpriteFlavor);
+//               sprites.add(sprite);
+//            }else if (hasSerialArrayListFlavor(support.getDataFlavors())){
+//               sprites = (ArrayList<Sprite>) transferable.getTransferData(serialArrayListFlavor);
+//            }else 
+//               
+            if (hasStringFlavor(support.getDataFlavors())){
                sprites = new ArrayList<Sprite>();               
                String string = (String) transferable.getTransferData(DataFlavor.stringFlavor);
                Strategy strategy = new CycleStrategy("id","ref");
@@ -301,10 +305,16 @@ class SpriteTransferHandler extends TransferHandler{
             for (Sprite sprite : sprites){
 
                // TODO: how come object is not serialized but still the same instance
-               Sprite copy = SerialClone.clone(sprite);
-               copy.setX(sprite.getX() + insertOffset.x);
-               copy.setY(sprite.getY() + insertOffset.y);
-               spritesToPaste.add(copy);
+               // no longer need to clone if we use xml serializtion
+//               Sprite copy = SerialClone.clone(sprite);
+//               copy.setX(sprite.getX() + insertOffset.x);
+//               copy.setY(sprite.getY() + insertOffset.y);
+//               spritesToPaste.add(copy);
+               
+             sprite.setX(sprite.getX() + insertOffset.x);
+             sprite.setY(sprite.getY() + insertOffset.y);
+             spritesToPaste.add(sprite);
+               
             }
 
             stepView.copyCutPasteTool.pasteSprites(spritesToPaste);
@@ -334,15 +344,9 @@ class SpriteTransferHandler extends TransferHandler{
             } catch (IOException e1) {
             } catch (Exception e) {
             }
-            
-            
+                        
             int index = listView.getSelectedIndex();
-            
-            for (Step step : steps){
-               listView.getStory().insertElementAt(step, index+1);
-            }
-            //listView.getStoryEditor().
-            
+            listView.getStory().insertElementsAt(steps, index+1);
          }else{
             return false;
          }
@@ -371,7 +375,21 @@ class SpriteTransferHandler extends TransferHandler{
             insertOffset.y -= 10;
          }
 
+      } else if (source instanceof StoryListView){
+         StoryListView listView = (StoryListView) source;
+         Story story = listView.getStory();
+
+         if (action == MOVE && !alreadyCut){
+
+            Object[] vals = listView.getSelectedValues();
+            for (Object v : vals){
+               story.removeElement((Step)v);
+            }            
+            alreadyCut = true;         
+         }
+         
       }
+  
 
 
       super.exportDone(source, data, action);
