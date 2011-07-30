@@ -18,7 +18,7 @@ public class SlideDeckListView extends JList {
       setModel(slideDeck);
    }
    
-   Deck getSlideDeck(){
+   protected Deck getSlideDeck(){
       return (Deck) getModel();
    }   
 }

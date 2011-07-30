@@ -143,7 +143,12 @@ public class StoryListView extends SlideDeckListView {
    StoryListView(){
       setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
       setCellRenderer(new StepCellRenderer());
-      setCellRenderer(new StepCellRenderer());
+      //setDragEnabled(true);
+   }
+
+
+   public Story getStory() {
+      return (Story) getSlideDeck();
    }
    
 //   void updateStory(){      

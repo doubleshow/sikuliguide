@@ -128,11 +128,9 @@ public class StoryEditor extends SlideDeckEditor implements BundleableDocumentOw
 
       map.put(StoryEditorKit.playCurrentStepAction.getValue(Action.NAME), StoryEditorKit.playCurrentStepAction);
       imap.put(KeyStroke.getKeyStroke("meta R"), StoryEditorKit.playCurrentStepAction.getValue(Action.NAME));
-      
-      
+           
       map.put(StoryEditorKit.insertNewStepAction.getValue(Action.NAME), StoryEditorKit.insertNewStepAction);
       imap.put(KeyStroke.getKeyStroke("meta N"), StoryEditorKit.insertNewStepAction.getValue(Action.NAME));
-
             
       map.put(bps.getLoadAction().getValue(Action.NAME), bps.getLoadAction());
       imap.put(KeyStroke.getKeyStroke("meta O"), bps.getLoadAction().getValue(Action.NAME));

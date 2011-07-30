@@ -17,7 +17,9 @@ import javax.swing.JLabel;
 
 import org.sikuli.ui.Bundleable;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Validate;
 
 abstract class ContextImage extends DefaultSprite implements Bundleable{   
@@ -97,12 +99,25 @@ implements Serializable, Bundleable {
    transient BufferedImage image = null;   
    SerializableBufferedImage serializableImage;
 
-
+   @Element(required = false)
+   String transferFilePath;
 
    String getImageFilename(){
       return "image-" + getImageId() + ".png";
    }
 
+   @Commit
+   void commit(){
+      System.out.println("commit import");
+      if (transferFilePath != null){
+         try {
+            image = ImageIO.read(new File(transferFilePath));
+            transferFilePath = null;
+         } catch (IOException e) {
+         }
+      }
+   }
+   
    //   @Override
    //   // TODO: implement the correct behavior
    public boolean isDirty() {
@@ -142,6 +157,17 @@ implements Serializable, Bundleable {
       if (image == null && serializableImage != null)
          image = serializableImage.getBufferedImage(); 
       return image;
+   }
+
+   public void exportTemporaryImageFileForTransfer() {
+      File temp;
+      try {
+         temp = File.createTempFile("org.sikuli.guide.ContextImage.transfer.","png");
+         temp.deleteOnExit();         
+         ImageIO.write(getBufferedImage(),"png",temp);
+         transferFilePath = temp.getAbsolutePath();
+      } catch (IOException e) {
+      }
    }
 
 }

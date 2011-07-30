@@ -61,75 +61,75 @@ import java.util.List;
 import java.util.Queue;
 
 class SerialClone {
-    public static <T> T clone(T x) {
-   try {
-       return cloneX(x);
-   } catch (IOException e) {
-       throw new IllegalArgumentException(e);
-   } catch (ClassNotFoundException e) {
-       throw new IllegalArgumentException(e);
-   }
-    }
-
-    private static <T> T cloneX(T x) throws IOException, ClassNotFoundException {
-   ByteArrayOutputStream bout = new ByteArrayOutputStream();
-   CloneOutput cout = new CloneOutput(bout);
-   cout.writeObject(x);
-   byte[] bytes = bout.toByteArray();
-   
-   ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-   CloneInput cin = new CloneInput(bin, cout);
-
-   @SuppressWarnings("unchecked")  // thanks to Bas de Bakker for the tip!
-   T clone = (T) cin.readObject();
-   return clone;
-    }
-
-    private static class CloneOutput extends ObjectOutputStream {
-   Queue<Class<?>> classQueue = new LinkedList<Class<?>>();
-
-   CloneOutput(OutputStream out) throws IOException {
-       super(out);
+   public static <T> T clone(T x) {
+      try {
+         return cloneX(x);
+      } catch (IOException e) {
+         throw new IllegalArgumentException(e);
+      } catch (ClassNotFoundException e) {
+         throw new IllegalArgumentException(e);
+      }
    }
 
-   @Override
-   protected void annotateClass(Class<?> c) {
-       classQueue.add(c);
+   private static <T> T cloneX(T x) throws IOException, ClassNotFoundException {
+      ByteArrayOutputStream bout = new ByteArrayOutputStream();
+      CloneOutput cout = new CloneOutput(bout);
+      cout.writeObject(x);
+      byte[] bytes = bout.toByteArray();
+
+      ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
+      CloneInput cin = new CloneInput(bin, cout);
+
+      @SuppressWarnings("unchecked")  // thanks to Bas de Bakker for the tip!
+      T clone = (T) cin.readObject();
+      return clone;
    }
 
-   @Override
-   protected void annotateProxyClass(Class<?> c) {
-       classQueue.add(c);
-   }
-    }
+   private static class CloneOutput extends ObjectOutputStream {
+      Queue<Class<?>> classQueue = new LinkedList<Class<?>>();
 
-    private static class CloneInput extends ObjectInputStream {
-   private final CloneOutput output;
-
-   CloneInput(InputStream in, CloneOutput output) throws IOException {
-       super(in);
-       this.output = output;
-   }
+      CloneOutput(OutputStream out) throws IOException {
+         super(out);
+      }
 
       @Override
-   protected Class<?> resolveClass(ObjectStreamClass osc)
-   throws IOException, ClassNotFoundException {
-       Class<?> c = output.classQueue.poll();
-       String expected = osc.getName();
-       String found = (c == null) ? null : c.getName();
-       if (!expected.equals(found)) {
-      throw new InvalidClassException("Classes desynchronized: " +
-         "found " + found + " when expecting " + expected);
-       }
-       return c;
+      protected void annotateClass(Class<?> c) {
+         classQueue.add(c);
+      }
+
+      @Override
+      protected void annotateProxyClass(Class<?> c) {
+         classQueue.add(c);
+      }
    }
+
+   private static class CloneInput extends ObjectInputStream {
+      private final CloneOutput output;
+
+      CloneInput(InputStream in, CloneOutput output) throws IOException {
+         super(in);
+         this.output = output;
+      }
+
+      @Override
+      protected Class<?> resolveClass(ObjectStreamClass osc)
+      throws IOException, ClassNotFoundException {
+         Class<?> c = output.classQueue.poll();
+         String expected = osc.getName();
+         String found = (c == null) ? null : c.getName();
+         if (!expected.equals(found)) {
+            throw new InvalidClassException("Classes desynchronized: " +
+                  "found " + found + " when expecting " + expected);
+         }
+         return c;
+      }
 
       @Override
       protected Class<?> resolveProxyClass(String[] interfaceNames)
-   throws IOException, ClassNotFoundException {
-          return output.classQueue.poll();
+      throws IOException, ClassNotFoundException {
+         return output.classQueue.poll();
       }
-    }
+   }
 }
 
 
@@ -154,45 +154,55 @@ class SpriteArrayList {
 
 
 class SpriteTransferHandler extends TransferHandler{
-      
+
    DataFlavor serialSpriteFlavor = new DataFlavor(Sprite.class, "Sprite");
    DataFlavor serialArrayListFlavor = new DataFlavor(SpriteArrayList.class, "SpriteArrayList");
    DataFlavor serializedXMLStringFlavor = new DataFlavor(SpriteArrayList.class, "serializedXMLStringFlavor");  
-   
+
    //Sprite spriteBeingTransferred;
    static Point insertOffset = new Point();
    static boolean alreadyCut = true;
-   
+
    protected Transferable createTransferable(JComponent c) {
       System.out.println("SpriteTransfer: createTransferable");
       if (c instanceof SpriteView) {
          System.out.println("SpriteView"); 
-         
+
          SpriteView source = (SpriteView) c;
          Sprite copy = SerialClone.clone(source.getSprite());  
          insertOffset.setLocation(0,0);
          alreadyCut = false;
          return new SpriteTransferable(copy);
-         
+
       }else if (c instanceof StepEditView){
          System.out.println("StepEditView");
-         
          StepEditView editView = (StepEditView) c;
-         SpriteView source = editView.selectionTool.getSelectedSpriteView();
-         Sprite copy = SerialClone.clone(source.getSprite());  
-         insertOffset.setLocation(0,0);//copy.getX(), copy.getY());
+         insertOffset.setLocation(0,0);
          alreadyCut = false;
-         
-         
          List<Sprite> sprites = editView.selectionTool.getSelectedSprites();
          editView.copyCutPasteTool.copySprites(sprites);
-          ArrayListTransferable<Sprite> a = new ArrayListTransferable<Sprite>(sprites);
-          return a;
+         ArrayListTransferable<Sprite> a = new ArrayListTransferable<Sprite>(sprites);
+         return a;
+      }else if (c instanceof StoryListView){
+         System.out.println("StoryListView");
+         StoryListView listView = (StoryListView) c;
+         Object[] objects = listView.getSelectedValues();
+         List<Step> steps = new ArrayList<Step>();
+         for (Object o : objects){
+            Step step = (Step) o;
+            
+            List<DefaultContextImage> ctx = step.getSpritesOfClass(DefaultContextImage.class); 
+            for (DefaultContextImage ct : ctx){
+               ct.exportTemporaryImageFileForTransfer();
+            }            
+            steps.add((Step) o);
+         }
+         return new ArrayListTransferable<Step>(steps);
       }
       return null;
    }
-   
-   
+
+
    private boolean hasSerialSpriteFlavor(DataFlavor[] flavors) {
       if (serialSpriteFlavor == null) {
          return false;
@@ -205,7 +215,7 @@ class SpriteTransferHandler extends TransferHandler{
       }
       return false;
    }
-   
+
    private boolean hasSerialArrayListFlavor(DataFlavor[] flavors) {
       if (serialArrayListFlavor == null) {
          return false;
@@ -218,7 +228,7 @@ class SpriteTransferHandler extends TransferHandler{
       }
       return false;
    }
-   
+
    private boolean hasStringFlavor(DataFlavor[] flavors) {
       for (int i = 0; i < flavors.length; i++) {
          if (flavors[i].equals(DataFlavor.stringFlavor)) {
@@ -229,7 +239,7 @@ class SpriteTransferHandler extends TransferHandler{
    }
 
 
-   
+
    @Override
    public boolean canImport(TransferSupport support){
       System.out.println("SpriteTransfer: canImport");      
@@ -245,19 +255,19 @@ class SpriteTransferHandler extends TransferHandler{
       }
       return false;
    }
-   
+
    @Override
    public boolean importData(TransferSupport support){
       System.out.println("SpriteTransfer: importData");      
-      JComponent source = (JComponent) support.getComponent();
+      JComponent target = (JComponent) support.getComponent();
       Transferable transferable = support.getTransferable();
       System.out.println("Transferable: " + transferable);
       if (!canImport(support)){
          return false;
       }
-      
-      if (source instanceof StepEditView){
-         StepEditView stepView = (StepEditView) source;
+
+      if (target instanceof StepEditView){
+         StepEditView stepView = (StepEditView) target;
 
          try {
             List<Sprite> sprites;
@@ -284,41 +294,75 @@ class SpriteTransferHandler extends TransferHandler{
             }else{
                return false;
             }
-           
+
             insertOffset.x += 10;
             insertOffset.y += 10;         
             List<Sprite> spritesToPaste = new ArrayList<Sprite>();
             for (Sprite sprite : sprites){
-                        
+
                // TODO: how come object is not serialized but still the same instance
                Sprite copy = SerialClone.clone(sprite);
                copy.setX(sprite.getX() + insertOffset.x);
                copy.setY(sprite.getY() + insertOffset.y);
                spritesToPaste.add(copy);
             }
-            
+
             stepView.copyCutPasteTool.pasteSprites(spritesToPaste);
-            
+
          } catch (UnsupportedFlavorException e) {
             e.printStackTrace();
          } catch (IOException e) {
             e.printStackTrace();
          }
+      }else if (target instanceof StoryListView){
+         System.out.println("importing into a StoryListView");
+         StoryListView listView = (StoryListView) target;
+         
+         List<Step> steps = null;
+         if (hasStringFlavor(support.getDataFlavors())){
+            steps = new ArrayList<Step>();               
+            String string;
+            
+            try {
+               string = (String) transferable.getTransferData(DataFlavor.stringFlavor);
+               Strategy strategy = new CycleStrategy("id","ref");
+               Serializer serializer = new Persister(strategy);
+               ArrayListTransferable t = serializer.read(ArrayListTransferable.class, string);               
+               steps = (List<Step>) t.data;            
+            
+            } catch (UnsupportedFlavorException e1) {
+            } catch (IOException e1) {
+            } catch (Exception e) {
+            }
+            
+            
+            int index = listView.getSelectedIndex();
+            
+            for (Step step : steps){
+               listView.getStory().insertElementAt(step, index+1);
+            }
+            //listView.getStoryEditor().
+            
+         }else{
+            return false;
+         }
+         
+
       }
-      
+
       return true;
    }
 
 
    @Override
    protected void exportDone(JComponent source, Transferable data, int action) {
-      
+
       if (source instanceof StepEditView){
          StepEditView stepView = (StepEditView) source;
          Step step = stepView.getStep();
-         
+
          if (action == MOVE && !alreadyCut){
-         
+
             stepView.copyCutPasteTool.cutSprites(stepView.selectionTool.getSelectedSprites());
 
             alreadyCut = true;
@@ -326,28 +370,25 @@ class SpriteTransferHandler extends TransferHandler{
             insertOffset.x -= 10;
             insertOffset.y -= 10;
          }
-         
+
       }
-      
-      
+
+
       super.exportDone(source, data, action);
    }
 
    public int getSourceActions(JComponent c) {
       return COPY_OR_MOVE;
    }
-   
+
    @Root
    static public class ArrayListTransferable<T> implements Transferable {
       @ElementList
       List<T> data;
 
-      @Attribute
-      String bundlePath="";
-      
       public ArrayListTransferable(){         
       }
-      
+
       public ArrayListTransferable(List<T> alist) {
          data = alist;
       }
@@ -357,7 +398,7 @@ class SpriteTransferHandler extends TransferHandler{
          if (!isDataFlavorSupported(flavor)) {
             throw new UnsupportedFlavorException(flavor);
          }
-         
+
          if (flavor.equals(serialArrayListFlavor)){
             return data;         
          }else if (flavor.equals(DataFlavor.stringFlavor)){
@@ -369,21 +410,14 @@ class SpriteTransferHandler extends TransferHandler{
                serializer.write(this, writer);
                return writer.toString();
             } catch (Exception e) {
-               // TODO Auto-generated catch block
                e.printStackTrace();
             }
-
-//            SpriteArrayList al = new SpriteArrayList();
-//            al.elements = (List<Sprite>) data;
-//            al.toXML();
-//            return al.toXML();
          }
          return data;
       }
-     
+
       DataFlavor serialArrayListFlavor = new DataFlavor(SpriteArrayList.class, "SpriteArrayList");
-
-
+      
       public DataFlavor[] getTransferDataFlavors() {
          return new DataFlavor[] { DataFlavor.stringFlavor, 
                serialArrayListFlavor };
@@ -398,22 +432,22 @@ class SpriteTransferHandler extends TransferHandler{
          return false;
       }
    }
-   
-   
+
+
    class SpriteTransferable implements Transferable {
 
       Sprite sprite;
       public SpriteTransferable(Sprite sprite) {
          this.sprite = sprite;
       }
-      
+
       @Override
       public Object getTransferData(DataFlavor flavor)
-            throws UnsupportedFlavorException, IOException {
+      throws UnsupportedFlavorException, IOException {
          if (!isDataFlavorSupported(flavor)) {
             throw new UnsupportedFlavorException(flavor);
          }
-         
+
          if (flavor.equals(serialSpriteFlavor)){
             return sprite;
          }else if (flavor.equals(serializedXMLStringFlavor)){
@@ -439,33 +473,33 @@ class SpriteTransferHandler extends TransferHandler{
          }         
          return false;
       }
-      
+
    }
 }
 
 
 
 class SpriteView extends JPanel implements PropertyChangeListener {
-      
+
    protected Sprite _sprite;
-      
+
    private float opacity = 1.0f;
-   
+
    private Point offset = new Point(0,0);
-   
-   
+
+
    public SpriteView(Sprite sprite){
       _sprite = sprite;
       _sprite.addPropertyChangeListener(this);      
       updateBounds();
       updateStyle();
       updateName();
-      
+
       setOpaque(false); // need this to get fading out work right for all views
-      
+
       //setFocusable(true);
       //setDragEnabled(true);
-      
+
       //setTransferHandler(new SpriteTransferHandler());
    }
 
@@ -473,50 +507,50 @@ class SpriteView extends JPanel implements PropertyChangeListener {
    void updateName(){
       setName(_sprite.getName());
    }
-   
+
    protected void updateStyle(){
       setForeground(((StyledSprite) _sprite).getForeground());
       setBackground(((StyledSprite) _sprite).getBackground());
    }
-   
+
    protected void updateBounds(){
       setLocation(_sprite.getX() + offset.x, _sprite.getY() + offset.y);
-      
+
       Dimension minSize = getMinimumSize();
       setSize(Math.max(minSize.width, _sprite.getWidth()),
             Math.max(minSize.height, _sprite.getHeight()));
    }
 
-   
+
    //BufferedImage spriteImage; <-- don't do this because this blows up the heap   
    public void paint(Graphics g){
-      
+
       // render the component in an offscreen buffer (TODO: with shadow)
-      
+
       BufferedImage spriteImage = getGraphicsConfiguration().createCompatibleImage(getWidth(), getHeight(), Transparency.TRANSLUCENT);      
       Graphics2D g2 = spriteImage.createGraphics();     
       g2.setRenderingHints(((Graphics2D) g).getRenderingHints());
       g2.setClip(g.getClip());
       super.paint(g2);
-      
+
       // so that we can paste it with translucent effects
       Graphics2D g2d = (Graphics2D) g;      
       g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,getOpacity()));
       g2d.drawImage(spriteImage,0,0,null,null);
 
 
-//      if (_model.isSelected()){
-//          Rectangle r = getBounds();
-//          g2d.setColor(getForeground());
-//          g2d.drawRect(0,0,r.width-1,r.height-1);
-//      }
-      
+      //      if (_model.isSelected()){
+      //          Rectangle r = getBounds();
+      //          g2d.setColor(getForeground());
+      //          g2d.drawRect(0,0,r.width-1,r.height-1);
+      //      }
+
       // Debug draw
-      
-//      Rectangle r = getBounds();
-//      g2d.setColor(Color.red);
-//      g2d.drawRect(0,0,r.width-1,r.height-1);
-      
+
+      //      Rectangle r = getBounds();
+      //      g2d.setColor(Color.red);
+      //      g2d.drawRect(0,0,r.width-1,r.height-1);
+
    }
 
    public Sprite getModel() {
@@ -525,7 +559,7 @@ class SpriteView extends JPanel implements PropertyChangeListener {
 
    @Override
    public void propertyChange(PropertyChangeEvent evt) {
-      
+
       if (evt.getPropertyName().equals(Sprite.PROPERTY_X)){         
          updateBounds();
       } else if (evt.getPropertyName().equals(Sprite.PROPERTY_Y)){      
@@ -544,7 +578,7 @@ class SpriteView extends JPanel implements PropertyChangeListener {
       } else {  
          return;
       }
-      
+
    }
 
    public Sprite getSprite() {
@@ -571,11 +605,11 @@ class SpriteView extends JPanel implements PropertyChangeListener {
 
 
 class ViewFactory {
-   
+
    public static ContextImageView createView(ContextImage contextImage){
       return new ContextImageView(contextImage);
    }
-   
+
    public static SpriteView createView(Sprite sprite){
       if (sprite instanceof FlagText)
          return new FlagTextView((FlagText)sprite);
