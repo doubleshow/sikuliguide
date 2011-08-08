@@ -5,20 +5,24 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
+import javax.swing.TransferHandler;
 
 import org.sikuli.ui.SlideDeckListView;
 
 import net.miginfocom.swing.MigLayout;
 
 public class StoryListView extends SlideDeckListView {
-   
+
    class StepCellRenderer extends JPanel implements ListCellRenderer {
 
       StepThumbView _stepView = new StepThumbView();
@@ -31,22 +35,22 @@ public class StoryListView extends SlideDeckListView {
 
          _indexLabel.setOpaque(false);
          _indexLabel.setBackground(null);
-         
+
          wrapper = new JPanel();
          wrapper.setLayout(new MigLayout("insets 2"));
          _stepView.setPreferredSize(new Dimension(100,100));
          _stepView.setOpaque(true);
          _stepView.setBackground(Color.white);
          wrapper.add(_stepView, "dock center");
-         
+
          add(_indexLabel);
          add(wrapper, "dock center");
-         
+
       }
 
       Color tileBorderColor = new Color(0.8f,0.8f,0.8f);
-      
-      
+
+
       public Component getListCellRendererComponent(
             JList list,              // the list
             Object value,            // value to display
@@ -60,33 +64,33 @@ public class StoryListView extends SlideDeckListView {
          _stepView.setPreferredSize(new Dimension(100,100));
          setPreferredSize(new Dimension(120,120));
          _indexLabel.setText(""+(index+1));
-         
+
          // cf: http://www.w3schools.com/tags/ref_color_tryit.asp
          Color lightYellow = new Color(255,255,224);
          Color saddleBrown = new Color(139,69,19);
          Color gold = new Color(255,215,0);
-         
-         
+
+
          wrapper.setBackground(tileBorderColor);
-         
+
          if (isSelected){
 
             setBackground(gold);
             setBorder(BorderFactory.createMatteBorder(3,10,3,10,gold));
-   
+
             if (cellHasFocus){
                wrapper.setBackground(gold.darker().darker());
             }
-               
+
          }else{
             setBackground(null);
             setBorder(BorderFactory.createEmptyBorder(3,10,3,10));
          }
-         
-         
+
+
 
          return this;
-         
+
       }
 
    }
@@ -101,5 +105,27 @@ public class StoryListView extends SlideDeckListView {
    public Story getStory() {
       return (Story) getSlideDeck();
    }
-   
+
+   public Action[] getEditActions(){
+
+      final Action cutAction = TransferHandler.getCutAction();
+      Action copyAction = TransferHandler.getCopyAction();
+
+      return new Action[]{
+            new AbstractAction(){
+               {
+                  putValue(Action.NAME, cutAction.getValue(Action.NAME));
+                  putValue(Action.ACCELERATOR_KEY, cutAction.getValue(Action.ACCELERATOR_KEY));
+               }
+
+               @Override
+               public void actionPerformed(ActionEvent e) {
+                  System.out.println("triggered");
+                  e.setSource(StoryListView.this);
+                  cutAction.actionPerformed(e);
+               }
+            }
+      };      
+   }
+
 }

@@ -1,7 +1,13 @@
 package org.sikuli.guide;
 
 import java.awt.AWTException;
+import java.awt.Component;
+import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.io.File;
+import java.io.IOException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -15,83 +21,85 @@ import org.sikuli.ui.BundleableDocumentOwner;
 import org.sikuli.ui.Bundler;
 import org.sikuli.ui.SlideDeckEditor;
 
-class StoryEditorKit {
-
-   
-   static class EditAction extends AbstractAction{
-      
-      final static String NEW = "new";
-      
-      EditAction(String s){
-         super(s);
-      }
-
-      @Override
-      public void actionPerformed(ActionEvent e) {
-         if (e.getSource() instanceof StoryEditor){
-            StoryEditor editor = (StoryEditor) e.getSource();
-         
-            Step step = editor.selectionTool.getSelected();
-            int index = editor.selectionTool.getSelectedIndex();
-            Step newStep = new Step();
-            editor.getStory().insertElementAt(newStep, index+1);
-            //Step editorStep.s>
-         
-         }
-         
-      }
-      
-   }
-   
-   static Action insertNewStepAction = new EditAction("Insert New"){
-      {
-         putValue(Action.NAME, "insertNewStepAction");
-         putValue(Action.ACTION_COMMAND_KEY, NEW);
-      }
-
-   };
-      
-   static class PlayAction extends AbstractAction{
-
-      final static String CURRENT = "current";
-
-      PlayAction(String s){
-         super(s);
-      }
-
-      @Override
-      public void actionPerformed(ActionEvent e) {
-         System.out.println("PLAY");
-         if (e.getSource() instanceof StoryEditor){
-            StoryEditor editor = (StoryEditor) e.getSource();
-            
-
-            if (e.getActionCommand().equals(CURRENT)){
-
-               editor.play();
-
-            }     
-         }
-      }
-
-   }
-
-   static Action playCurrentStepAction = new PlayAction("Play"){
-      {
-         putValue(Action.NAME, "playCurrentStepAction");
-         putValue(Action.ACTION_COMMAND_KEY, CURRENT);
-      }
-   };
-
-}
-
-
 // Save/Load contents to a bundle folder including xml and images
-public class StoryEditor extends SlideDeckEditor implements BundleableDocumentOwner {
+public class StoryEditor extends SlideDeckEditor 
+   implements BundleableDocumentOwner {
 
+   
+   public static class EditorAction extends AbstractAction {
+      
+      public EditorAction(String s) {
+         super(s);
+      }
 
-   StoryEditor() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+         System.out.println("editor action triggered");
+      }
+      
+      // return the one that currently has focus
+      public StoryEditor getFocusedComponent(){
+         Component comp = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+         if (comp instanceof StoryEditor)
+            return (StoryEditor) comp;
+         return null;
+      }
+      
+      // return the one as the action source, or if not possible, the one that most recently has focus
+      public StoryEditor getComponent(ActionEvent e){
+         if (e.getSource() instanceof StoryEditor){
+            return (StoryEditor) e.getSource();
+         }else {      
+            return StoryEditor.getFocusedComponent();
+         }
+      }
+   }
+   
+   private static class ActionSupport{      
+      StoryEditor _mostRecentlyFocusedInstance = null;
+      void register(final StoryEditor editor){
+         editor.addFocusListener(new FocusListener(){
+
+            @Override
+            public void focusGained(FocusEvent arg0) {
+               _mostRecentlyFocusedInstance = editor;               
+            }
+
+            @Override
+            public void focusLost(FocusEvent arg0) {
+               //_mostRecentlyFocusedInstance = null;               
+            }            
+         });         
+      }
+   }
+   private static ActionSupport _actionSupport = new ActionSupport();
+   private static StoryEditor getFocusedComponent(){
+      return _actionSupport._mostRecentlyFocusedInstance;
+   }
+   
+   class LastFocusOwnerTracker implements FocusListener{
+      Component _lastFocusOwner;
+
+      @Override
+      public void focusGained(FocusEvent e) {
+         _lastFocusOwner = e.getComponent();
+      }
+
+      @Override
+      public void focusLost(FocusEvent e) {
+      }
+      
+      Component getLastFocusOwner(){
+         return _lastFocusOwner;
+      }
+   }   
+   LastFocusOwnerTracker _lastFocusOwnerTracker = new LastFocusOwnerTracker();
+   
+   public StoryEditor() {
       super();
+      
+      ComponentActionSupport.register(this);
+      
       initActionInputMap();
       setFocusable(true);
       
@@ -105,10 +113,27 @@ public class StoryEditor extends SlideDeckEditor implements BundleableDocumentOw
 
       StepEditView editView = new StepEditView();      
       setSlideEditView(editView);
-
+      
+      // these allow StoryEditor to remember which view mostly recently had focus
+      // so that an action invoked by another component can be re-directed to the
+      // right component
+      listView.addFocusListener(_lastFocusOwnerTracker);
+      editView.addFocusListener(_lastFocusOwnerTracker);
+      
       editView.requestFocus();
+      
+      setTransferHandler(new SpriteTransferHandler());
    }
    
+   // Redirect the focus to editView
+   @Override
+   public void requestFocus(){
+      super.requestFocus();
+      System.out.println("requesting focus for editview");
+      //getListView().setFocusable(false);
+      getEditView().requestFocus();
+      //getListView().setFocusable(true);
+   }
    
    void play() {
       Step step = (Step) getSelected();
@@ -121,28 +146,39 @@ public class StoryEditor extends SlideDeckEditor implements BundleableDocumentOw
          //e.printStackTrace();
       }
    }
-
-   Bundler bps = new Bundler();
-   private void initActionInputMap() {
-      ActionMap map = getActionMap();
-      InputMap imap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-
-      map.put(StoryEditorKit.playCurrentStepAction.getValue(Action.NAME), StoryEditorKit.playCurrentStepAction);
-      imap.put(KeyStroke.getKeyStroke("meta R"), StoryEditorKit.playCurrentStepAction.getValue(Action.NAME));
-           
-      map.put(StoryEditorKit.insertNewStepAction.getValue(Action.NAME), StoryEditorKit.insertNewStepAction);
-      imap.put(KeyStroke.getKeyStroke("meta N"), StoryEditorKit.insertNewStepAction.getValue(Action.NAME));
-            
-      map.put(bps.getLoadAction().getValue(Action.NAME), bps.getLoadAction());
-      imap.put(KeyStroke.getKeyStroke("meta O"), bps.getLoadAction().getValue(Action.NAME));
-      map.put(bps.getSaveAction().getValue(Action.NAME), bps.getSaveAction());
-      imap.put(KeyStroke.getKeyStroke("meta S"), bps.getSaveAction().getValue(Action.NAME));
+   
+   private void addActions(ActionMap map, Action[] actions) {
+      int n = actions.length;
+      for (int i = 0; i < n; i++) {
+         Action a = actions[i];
+         System.out.println(a.getValue(Action.NAME));
+         map.put(a.getValue(Action.NAME), a);
+      }
    }
 
-   SelectionTool<Step> selectionTool = new SelectionTool<Step>();
-   class SelectionTool<T>{
+   Bundler bps = new Bundler();
+   private void initActionInputMap(){
+      
+      addActions(getActionMap(), StoryEditorKit.getActions());
+      addActions(getActionMap(), StepEditKit.getActions());
+      //ActionMap map = getActionMap();
+      InputMap imap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+
+      //map.put(StoryEditorKit.playCurrentStepAction.getValue(Action.NAME), StoryEditorKit.playCurrentStepAction);
+      imap.put(KeyStroke.getKeyStroke("meta R"), StoryEditorKit.playCurrentStepAction);           
+      imap.put(KeyStroke.getKeyStroke("meta N"), StoryEditorKit.insertNewStepAction);
+      imap.put(KeyStroke.getKeyStroke("meta O"), bps.getLoadAction().getValue(Action.NAME));
+      imap.put(KeyStroke.getKeyStroke("meta S"), bps.getSaveAction().getValue(Action.NAME));
+      
             
-      T getSelected(){
+      //map.put(bps.getLoadAction().getValue(Action.NAME), bps.getLoadAction());
+      //map.put(bps.getSaveAction().getValue(Action.NAME), bps.getSaveAction());
+   }
+
+   private SelectionTool<Step> selectionTool = new SelectionTool<Step>();
+   public class SelectionTool<T>{
+            
+      public T getSelected(){
          return (T) getListView().getSelectedValue();         
       }
 
@@ -167,10 +203,29 @@ public class StoryEditor extends SlideDeckEditor implements BundleableDocumentOw
       setSlideDeck(story);
    }
    
-   Story getStory() {
+   protected Story getStory() {
       return (Story) getSlideDeck();
    }
 
+   public SelectionTool<Step> getSelectionTool() {
+      return selectionTool;
+   }
+
+
+   public StepEditView getEditView(){
+      return (StepEditView) editView;
+   }
+   
+   protected void insertImage(File file){      
+      try {
+         getEditView().editTool.importContextImage(file);
+      } catch (IOException e) {
+      }   
+   }
+
+   public Component getLastFocusOwner() {
+      return _lastFocusOwnerTracker.getLastFocusOwner();
+   }
 
 
 }

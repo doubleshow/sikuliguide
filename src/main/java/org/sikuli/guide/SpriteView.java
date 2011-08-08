@@ -2,6 +2,7 @@ package org.sikuli.guide;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -163,45 +164,96 @@ class SpriteTransferHandler extends TransferHandler{
    static Point insertOffset = new Point();
    static boolean alreadyCut = true;
 
-   protected Transferable createTransferable(JComponent c) {
-      System.out.println("SpriteTransfer: createTransferable");
-      if (c instanceof SpriteView) {
-         System.out.println("SpriteView"); 
 
-         SpriteView source = (SpriteView) c;
-         Sprite copy = SerialClone.clone(source.getSprite());  
-         insertOffset.setLocation(0,0);
-         alreadyCut = false;
-         return new SpriteTransferable(copy);
-
-      }else if (c instanceof StepEditView){
-         System.out.println("StepEditView");
-         StepEditView editView = (StepEditView) c;
-         insertOffset.setLocation(0,0);
-         alreadyCut = false;
-         List<Sprite> sprites = editView.selectionTool.getSelectedSprites();
-         editView.copyCutPasteTool.copySprites(sprites);
-         ArrayListTransferable<Sprite> a = new ArrayListTransferable<Sprite>(sprites);
-         return a;
-      }else if (c instanceof StoryListView){
-         System.out.println("StoryListView");
-         StoryListView listView = (StoryListView) c;
-         alreadyCut = false;
-
-         Object[] objects = listView.getSelectedValues();
-         List<Step> steps = new ArrayList<Step>();
-         for (Object o : objects){
-            Step step = (Step) o;
-            
-            List<DefaultContextImage> ctx = step.getSpritesOfClass(DefaultContextImage.class); 
-            for (DefaultContextImage ct : ctx){
-               ct.exportTemporaryImageFileForTransfer();
-            }            
-            steps.add((Step) o);
+   Transferable createTransferableForStepEditView(StepEditView editView){
+      System.out.println("creating transferable for StepEditView");
+      insertOffset.setLocation(0,0);
+      alreadyCut = false;
+      List<Sprite> sprites = editView.selectionTool.getSelectedSprites();
+      
+      for (Sprite sprite : sprites){
+         if (sprite instanceof DefaultContextImage){
+            ((DefaultContextImage) sprite).exportTemporaryImageFileForTransfer();
          }
-         return new ArrayListTransferable<Step>(steps);
       }
+      editView.copyCutPasteTool.copySprites(sprites);
+      return new ArrayListTransferable<Sprite>(sprites);
+   }
+
+   Transferable createTransferableForStoryListView(StoryListView listView){
+      System.out.println("creating transferable for StoryListView");
+      alreadyCut = false;
+      Object[] objects = listView.getSelectedValues();
+      List<Step> steps = new ArrayList<Step>();
+      for (Object o : objects){
+         Step step = (Step) o;
+         List<DefaultContextImage> ctx = step.getSpritesOfClass(DefaultContextImage.class); 
+         for (DefaultContextImage ct : ctx){
+            ct.exportTemporaryImageFileForTransfer();
+         }            
+         steps.add((Step) o);
+      }
+      return new ArrayListTransferable<Step>(steps);
+   }
+
+   protected Transferable createTransferable(JComponent c) {
+      System.out.println(getClass() + ": createTransferable");
+
+      Component target = c;
+
+      if (c instanceof StoryEditor){
+         StoryEditor editor = (StoryEditor) c;
+         System.out.println("StoryEditor: last focused component " + editor.getLastFocusOwner().getClass());
+         target = editor.getLastFocusOwner();
+      }
+
+      if (target instanceof StepEditView){
+         return createTransferableForStepEditView((StepEditView) target);
+      }else if (target instanceof StoryListView){
+         return createTransferableForStoryListView((StoryListView) target);
+      }
+
       return null;
+      //      
+      //      return null;
+      //      
+      ////      else if (c instanceof SpriteView) {
+      ////         System.out.println("SpriteView"); 
+      ////
+      ////         SpriteView source = (SpriteView) c;
+      ////         Sprite copy = SerialClone.clone(source.getSprite());  
+      ////         insertOffset.setLocation(0,0);
+      ////         alreadyCut = false;
+      ////         return new SpriteTransferable(copy);
+      //
+      //      if (c instanceof StepEditView){
+      //         System.out.println("StepEditView");
+      //         StepEditView editView = (StepEditView) c;
+      //         insertOffset.setLocation(0,0);
+      //         alreadyCut = false;
+      //         List<Sprite> sprites = editView.selectionTool.getSelectedSprites();
+      //         editView.copyCutPasteTool.copySprites(sprites);
+      //         ArrayListTransferable<Sprite> a = new ArrayListTransferable<Sprite>(sprites);
+      //         return a;
+      //      }else if (c instanceof StoryListView){
+      //         System.out.println("StoryListView");
+      //         StoryListView listView = (StoryListView) c;
+      //         alreadyCut = false;
+      //
+      //         Object[] objects = listView.getSelectedValues();
+      //         List<Step> steps = new ArrayList<Step>();
+      //         for (Object o : objects){
+      //            Step step = (Step) o;
+      //            
+      //            List<DefaultContextImage> ctx = step.getSpritesOfClass(DefaultContextImage.class); 
+      //            for (DefaultContextImage ct : ctx){
+      //               ct.exportTemporaryImageFileForTransfer();
+      //            }            
+      //            steps.add((Step) o);
+      //         }
+      //         return new ArrayListTransferable<Step>(steps);
+      //      }
+      //      return null;
    }
 
 
@@ -258,105 +310,196 @@ class SpriteTransferHandler extends TransferHandler{
       return false;
    }
 
+      
+   private void importSteps(StoryListView listView, List<Step> steps){
+      int insertPosition = 0;
+      if (listView.getStory().getSize() == 0){
+         insertPosition = 0;
+      }else{
+         int lead = listView.getLeadSelectionIndex();
+         int anchor = listView.getAnchorSelectionIndex();
+         insertPosition = Math.max(lead,anchor) + 1;
+      }
+      listView.getStory().insertElementsAt(steps, insertPosition);
+   }
+
+   private void importSprites(StepEditView editView, List<Sprite> sprites){
+      insertOffset.x += 10;
+      insertOffset.y += 10;         
+      List<Sprite> spritesToPaste = new ArrayList<Sprite>();
+      for (Sprite sprite : sprites){
+         sprite.setX(sprite.getX() + insertOffset.x);
+         sprite.setY(sprite.getY() + insertOffset.y);
+         spritesToPaste.add(sprite);         
+      }
+      editView.copyCutPasteTool.pasteSprites(spritesToPaste);
+   }
+
    @Override
    public boolean importData(TransferSupport support){
-      System.out.println("SpriteTransfer: importData");      
-      JComponent target = (JComponent) support.getComponent();
+      Component target = support.getComponent();
+      System.out.println("SpriteTransfer: importData into target of class " + target.getClass());      
+
       Transferable transferable = support.getTransferable();
       System.out.println("Transferable: " + transferable);
       if (!canImport(support)){
          return false;
       }
 
-      if (target instanceof StepEditView){
-         StepEditView stepView = (StepEditView) target;
-
+      List items;
+      if (hasStringFlavor(support.getDataFlavors())){
+         items = new ArrayList();               
+         String string;
          try {
-            List<Sprite> sprites;
-//            if (hasSerialSpriteFlavor(support.getDataFlavors())){
-//               sprites = new ArrayList<Sprite>();
-//               Sprite sprite = (Sprite) transferable.getTransferData(serialSpriteFlavor);
-//               sprites.add(sprite);
-//            }else if (hasSerialArrayListFlavor(support.getDataFlavors())){
-//               sprites = (ArrayList<Sprite>) transferable.getTransferData(serialArrayListFlavor);
-//            }else 
-//               
-            if (hasStringFlavor(support.getDataFlavors())){
-               sprites = new ArrayList<Sprite>();               
-               String string = (String) transferable.getTransferData(DataFlavor.stringFlavor);
-               Strategy strategy = new CycleStrategy("id","ref");
-               Serializer serializer = new Persister(strategy);
-               System.out.println("Try to import a sprite from this string: " + string);
-               try {
-                  ArrayListTransferable t = serializer.read(ArrayListTransferable.class, string);
-                  sprites = (List<Sprite>) t.data;
-                  System.out.println("Sprite imported from clipboard as string");
-                  //sprites.add(sprite);
-               } catch (Exception e) {
-                  e.printStackTrace();
-               }
-            }else{
-               return false;
-            }
+            string = (String) transferable.getTransferData(DataFlavor.stringFlavor);
+            Strategy strategy = new CycleStrategy("id","ref");
+            Serializer serializer = new Persister(strategy);
+            System.out.println("Try to import from this string: " + string);
 
-            insertOffset.x += 10;
-            insertOffset.y += 10;         
-            List<Sprite> spritesToPaste = new ArrayList<Sprite>();
-            for (Sprite sprite : sprites){
-
-               // TODO: how come object is not serialized but still the same instance
-               // no longer need to clone if we use xml serializtion
-//               Sprite copy = SerialClone.clone(sprite);
-//               copy.setX(sprite.getX() + insertOffset.x);
-//               copy.setY(sprite.getY() + insertOffset.y);
-//               spritesToPaste.add(copy);
-               
-             sprite.setX(sprite.getX() + insertOffset.x);
-             sprite.setY(sprite.getY() + insertOffset.y);
-             spritesToPaste.add(sprite);
-               
-            }
-
-            stepView.copyCutPasteTool.pasteSprites(spritesToPaste);
-
-         } catch (UnsupportedFlavorException e) {
-            e.printStackTrace();
-         } catch (IOException e) {
+            ArrayListTransferable t = serializer.read(ArrayListTransferable.class, string);
+            items = t.data;
+            System.out.println("Sprite imported from clipboard as string");
+            
+         } catch (UnsupportedFlavorException e1) {
+         } catch (IOException e1) {
+         } catch (Exception e) {
             e.printStackTrace();
          }
-      }else if (target instanceof StoryListView){
-         System.out.println("importing into a StoryListView");
-         StoryListView listView = (StoryListView) target;
-         
-         List<Step> steps = null;
-         if (hasStringFlavor(support.getDataFlavors())){
-            steps = new ArrayList<Step>();               
-            String string;
-            
-            try {
-               string = (String) transferable.getTransferData(DataFlavor.stringFlavor);
-               Strategy strategy = new CycleStrategy("id","ref");
-               Serializer serializer = new Persister(strategy);
-               ArrayListTransferable t = serializer.read(ArrayListTransferable.class, string);               
-               steps = (List<Step>) t.data;            
-            
-            } catch (UnsupportedFlavorException e1) {
-            } catch (IOException e1) {
-            } catch (Exception e) {
-            }                       
-            
-            int lead = listView.getLeadSelectionIndex();
-            int anchor = listView.getAnchorSelectionIndex();
-            int insertPosition = Math.max(lead,anchor) + 1;
-            listView.getStory().insertElementsAt(steps, insertPosition);
+
+      }else{
+         return false;
+      }
+
+      Object item = items.get(0);      
+
+      if (target instanceof StoryEditor){
+         StoryEditor editor = (StoryEditor) target;
+         //         System.out.println("StoryEditor: last focused component " + editor.getLastFocusOwner().getClass());
+         //         //target = editor.getLastFocusOwner();
+
+         if (item instanceof Sprite){
+            importSprites(editor.getEditView(), items);
+            return true;
+         }else if (item instanceof Step){
+            importSteps((StoryListView) editor.getListView(), items);
+            return true;
          }else{
             return false;
          }
-         
 
+      }else if (target instanceof StepEditView && item instanceof Sprite){
+         System.out.println("Importing into a StepEditView");         
+         StepEditView editView = (StepEditView) target;
+         importSprites(editView, items);
+         return true;
+
+      }else if (target instanceof StoryListView && item instanceof Step){
+         StoryListView listView = (StoryListView) target;
+         System.out.println("Importing into a StoryListView");
+         importSteps(listView, items);
+         return true;
+      }else {
+         return false;
       }
 
-      return true;
+      //      
+      //      
+      //      (StoryListView) editor.getListView(), items);
+      //         
+      //         try {
+      //            List<Sprite> sprites;
+      ////            if (hasSerialSpriteFlavor(support.getDataFlavors())){
+      ////               sprites = new ArrayList<Sprite>();
+      ////               Sprite sprite = (Sprite) transferable.getTransferData(serialSpriteFlavor);
+      ////               sprites.add(sprite);
+      ////            }else if (hasSerialArrayListFlavor(support.getDataFlavors())){
+      ////               sprites = (ArrayList<Sprite>) transferable.getTransferData(serialArrayListFlavor);
+      ////            }else 
+      ////               
+      //            if (hasStringFlavor(support.getDataFlavors())){
+      //               sprites = new ArrayList<Sprite>();               
+      //               String string = (String) transferable.getTransferData(DataFlavor.stringFlavor);
+      //               Strategy strategy = new CycleStrategy("id","ref");
+      //               Serializer serializer = new Persister(strategy);
+      //               System.out.println("Try to import a sprite from this string: " + string);
+      //               try {
+      //                  ArrayListTransferable t = serializer.read(ArrayListTransferable.class, string);
+      //                  sprites = (List<Sprite>) t.data;
+      //                  System.out.println("Sprite imported from clipboard as string");
+      //                  if (!(sprites.get(0) instanceof Sprite)){
+      //                     return false;
+      //                  }
+      //                  
+      //               } catch (Exception e) {
+      //                  e.printStackTrace();
+      //               }
+      //            }else{
+      //               return false;
+      //            }
+      //
+      //            insertOffset.x += 10;
+      //            insertOffset.y += 10;         
+      //            List<Sprite> spritesToPaste = new ArrayList<Sprite>();
+      //            for (Sprite sprite : sprites){
+      //
+      //               // TODO: how come object is not serialized but still the same instance
+      //               // no longer need to clone if we use xml serializtion
+      ////               Sprite copy = SerialClone.clone(sprite);
+      ////               copy.setX(sprite.getX() + insertOffset.x);
+      ////               copy.setY(sprite.getY() + insertOffset.y);
+      ////               spritesToPaste.add(copy);
+      //               
+      //             sprite.setX(sprite.getX() + insertOffset.x);
+      //             sprite.setY(sprite.getY() + insertOffset.y);
+      //             spritesToPaste.add(sprite);
+      //               
+      //            }
+      //
+      //            stepView.copyCutPasteTool.pasteSprites(spritesToPaste);
+      //
+      //         } catch (UnsupportedFlavorException e) {
+      //            e.printStackTrace();
+      //         } catch (IOException e) {
+      //            e.printStackTrace();
+      //         }
+      //      }else if (target instanceof StoryListView){
+      //         
+      //         
+      //         System.out.println("importing into a StoryListView");
+      //         StoryListView listView = (StoryListView) target;
+      //         
+      //         List<Step> steps = null;
+      //         if (hasStringFlavor(support.getDataFlavors())){
+      //            steps = new ArrayList<Step>();               
+      //            String string;
+      //            
+      //            try {
+      //               string = (String) transferable.getTransferData(DataFlavor.stringFlavor);
+      //               Strategy strategy = new CycleStrategy("id","ref");
+      //               Serializer serializer = new Persister(strategy);
+      //               ArrayListTransferable t = serializer.read(ArrayListTransferable.class, string);               
+      //               steps = (List<Step>) t.data;
+      //               if (!(steps.get(0) instanceof Step)){
+      //                  return false;
+      //               }
+      //            
+      //            } catch (UnsupportedFlavorException e1) {
+      //            } catch (IOException e1) {
+      //            } catch (Exception e) {
+      //            }                       
+      //            
+      //            int lead = listView.getLeadSelectionIndex();
+      //            int anchor = listView.getAnchorSelectionIndex();
+      //            int insertPosition = Math.max(lead,anchor) + 1;
+      //            listView.getStory().insertElementsAt(steps, insertPosition);
+      //         }else{
+      //            return false;
+      //         }
+      //         
+      //
+      //      }
+      //
+      //      return true;
    }
 
 
@@ -389,9 +532,30 @@ class SpriteTransferHandler extends TransferHandler{
             }            
             alreadyCut = true;         
          }
-         
+
+      }else if (source instanceof StoryEditor){
+         System.out.println("StoryEditor"); 
+         StoryEditor editor = (StoryEditor) source;
+         if (editor.getEditView().isFocusOwner()){
+            System.out.println("StepEditView");
+            StepEditView editView = editor.getEditView();
+            Step step = editView.getStep();
+
+            if (action == MOVE && !alreadyCut){
+
+               editView.copyCutPasteTool.cutSprites(editView.selectionTool.getSelectedSprites());
+
+               alreadyCut = true;
+               // purposely shifted so it would be added to the old location
+               insertOffset.x -= 10;
+               insertOffset.y -= 10;
+            }
+         }
+
+
       }
-  
+
+
 
 
       super.exportDone(source, data, action);
@@ -437,7 +601,7 @@ class SpriteTransferHandler extends TransferHandler{
       }
 
       DataFlavor serialArrayListFlavor = new DataFlavor(SpriteArrayList.class, "SpriteArrayList");
-      
+
       public DataFlavor[] getTransferDataFlavors() {
          return new DataFlavor[] { DataFlavor.stringFlavor, 
                serialArrayListFlavor };

@@ -31,7 +31,7 @@ public class SlideDeckEditor extends JPanel {
    LeftPanel leftPanel = new LeftPanel();
    RightPanel rightPanel = new RightPanel();
    
-   SlideEditView editView = new SlideEditView();
+   protected SlideEditView editView = new SlideEditView();
    private SlideDeckListView listView = new SlideDeckListView();
 
    JPanel blankView;
