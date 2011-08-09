@@ -8,10 +8,12 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EventListener;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.Timer;
+import javax.swing.event.EventListenerList;
 
 import org.jdesktop.core.animation.timing.Animator;
 import org.jdesktop.core.animation.timing.AnimatorBuilder;
@@ -21,13 +23,44 @@ import org.jdesktop.swing.animation.timing.sources.SwingTimerTimingSource;
 import org.sikuli.cv.FindResult;
 import org.sikuli.cv.TemplateFinder;
 
-interface TrackerListener {
+class TrackerEvent {
+   TrackerEvent(Tracker tracker, Target target, FindResult findResult){
+      this.tracker = tracker;
+      this.target = target;
+      this.findResult = findResult;
+   }
+   
+   private Target target;
+   private Tracker tracker;
+   private FindResult findResult;
+   public void setTarget(Target target) {
+      this.target = target;
+   }
+   public Target getTarget() {
+      return target;
+   }
+   public void setTracker(Tracker tracker) {
+      this.tracker = tracker;
+   }
+   public Tracker getTracker() {
+      return tracker;
+   }
+   public void setFindResult(FindResult findResult) {
+      this.findResult = findResult;
+   }
+   public FindResult getFindResult() {
+      return findResult;
+   }
+   
+//   Target getTarget();
+//   Tracker getTracker();
+//   FindResult getFindResult();
+}
 
-//   void patternAnchored(Object source);
-   void targetFoundFirstTime(Target target, FindResult match);
-   void targetFoundAgain(Target target, FindResult match);
-   void targetNotFound(Target target);
-
+interface TrackerListener extends EventListener {
+   void targetFoundFirstTime(TrackerEvent event);
+   void targetFoundAgain(TrackerEvent event);
+   void targetNotFound(TrackerEvent event);
 }
 //
 //class SklClicker implements SklTrackerListener, Transition{
@@ -239,6 +272,11 @@ public class Tracker extends Thread {
 //      //this(new Pattern(patternModel.getImageUrl()));
 //   }
 
+   boolean _isTargetFound;
+   public boolean isTargetFound(){
+      return _isTargetFound;
+   }
+   
    public void setRegion(Rectangle regionModel){
       _regionModel = regionModel;
    }
@@ -318,11 +356,15 @@ public class Tracker extends Thread {
 //      }      
    }
    
-   List<TrackerListener> _listeners = new ArrayList<TrackerListener>();   
-   public void addTrackerListener(TrackerListener listener){
-      _listeners.add(listener);
+   private EventListenerList listenerList = new EventListenerList();   
+   public void addTrackerListener(TrackerListener l) {
+      listenerList.add(TrackerListener.class, l);
    }
-     
+   
+   public void removeTrackerListener(TrackerListener l) {
+      listenerList.remove(TrackerListener.class, l);
+   }
+   
    
    boolean isPatternStillThereInTheSameLocation(){
       try {
@@ -339,6 +381,7 @@ public class Tracker extends Thread {
    boolean running;
    public void run(){
       running = true;
+      _isTargetFound = false;
 
       // Looking for the target for the first time
       //System.out.println("[Tracker] started");
@@ -351,8 +394,9 @@ public class Tracker extends Thread {
       // this means the tracker has been stopped before the pattern is found
       if (_lastMatch == null)
          return;
-      
-      notifyTargetFoundFirstTime(_lastMatch);
+
+      _isTargetFound = true;
+      fireTargetFoundFirstTime(_lastMatch);
                
       while (running){
 
@@ -370,22 +414,55 @@ public class Tracker extends Thread {
          // be hidden
          FindResult newMatch = findTarget();
          if (newMatch == null && _lastMatch != null){
-            notifyTargetNotFound();
+            fireTargetNotFound();
          }
 
          if (newMatch != null){
-            notifyTargetFoundAgain(newMatch);
+            fireTargetFoundAgain(newMatch);
          }
 
          _lastMatch = newMatch;
       } 
    }
-
-   private void notifyTargetFoundFirstTime(FindResult match) {
-      for (TrackerListener listener : _listeners){
-         listener.targetFoundFirstTime(_target,match);
+   
+   private void fireTargetFoundFirstTime(FindResult match){      
+      TrackerEvent event = new TrackerEvent(this, _target, match);
+      Object[] listeners = listenerList.getListenerList();
+      for (int i=0; i<listeners.length; i+=2) {
+         if (listeners[i]==TrackerListener.class) {            
+               ((TrackerListener)listeners[i+1]).targetFoundFirstTime(event);               
+         }
       }
-      System.out.println("Target found first time!");
+   }
+   
+   private void fireTargetFoundAgain(FindResult match){      
+      TrackerEvent event = new TrackerEvent(this, _target, match);
+      Object[] listeners = listenerList.getListenerList();
+      for (int i=0; i<listeners.length; i+=2) {
+         if (listeners[i]==TrackerListener.class) {            
+               ((TrackerListener)listeners[i+1]).targetFoundAgain(event);               
+         }
+      }
+   }
+   
+   private void fireTargetNotFound(){      
+      TrackerEvent event = new TrackerEvent(this, _target, null);
+      Object[] listeners = listenerList.getListenerList();
+      for (int i=0; i<listeners.length; i+=2) {
+         if (listeners[i]==TrackerListener.class) {            
+               ((TrackerListener)listeners[i+1]).targetNotFound(event);               
+         }
+      }
+   }
+   
+   
+
+
+//   private void notifyTargetFoundFirstTime(FindResult match) {
+//      for (TrackerListener listener : _listeners){
+//         listener.targetFoundFirstTime(new TrackerEvent(this, _target, match));
+//      }
+//      System.out.println("Target found first time!");
       
 //      Animator anim;
 //      anim = new AnimatorBuilder().setDuration(1, TimeUnit.SECONDS).build();
@@ -400,30 +477,30 @@ public class Tracker extends Thread {
 //      _target.setWidth(match.width);
 //      _target.setHeight(match.height);
 //      _target.setFound(true);
-   }
+//   }
    
 
    
-   private void notifyTargetNotFound() {
-      for (TrackerListener listener : _listeners){
-         listener.targetNotFound(_target);
-      }
-      System.out.println("Target not found");
-//      _target.setFound(false);
-   }
+//   private void notifyTargetNotFound() {
+//      for (TrackerListener listener : _listeners){
+//         listener.targetNotFound(new TrackerEvent(this, _target, null));
+//      }
+//      System.out.println("Target not found");
+////      _target.setFound(false);
+//   }
    
-   private void notifyTargetFoundAgain(FindResult match) {
-      for (TrackerListener listener : _listeners){
-         listener.targetFoundAgain(_target,match);
-      }
-      System.out.println("Target found again");
-
-//      _target.setX(match.x);
-//      _target.setY(match.y);
-//      _target.setWidth(match.width);
-//      _target.setHeight(match.height);
-//      _target.setFound(true);
-   }
+//   private void notifyTargetFoundAgain(FindResult match) {
+//      for (TrackerListener listener : _listeners){
+//         listener.targetFoundAgain(new TrackerEvent(this, _target, match));
+//      }
+//      System.out.println("Target found again");
+//
+////      _target.setX(match.x);
+////      _target.setY(match.y);
+////      _target.setWidth(match.width);
+////      _target.setHeight(match.height);
+////      _target.setFound(true);
+//   }
 
    public void stopTracking(){
       running = false;

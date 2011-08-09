@@ -286,24 +286,24 @@ public class ViewTestCase {
          
       });
       
-      tracker.addTrackerListener(new TrackerListener(){
-
-         @Override
-         public void targetFoundFirstTime(Target target, FindResult match) {
-            
-            System.out.println("m : " + match);            
-         }
-
-         @Override
-         public void targetFoundAgain(Target target, FindResult match) {
-         }
-
-         @Override
-         public void targetNotFound(Target target) {
-         }
-         
-      });
-      
+//      tracker.addTrackerListener(new TrackerListener(){
+//
+//         @Override
+//         public void targetFoundFirstTime(Target target, FindResult match) {
+//            
+//            System.out.println("m : " + match);            
+//         }
+//
+//         @Override
+//         public void targetFoundAgain(Target target, FindResult match) {
+//         }
+//
+//         @Override
+//         public void targetNotFound(Target target) {
+//         }
+//         
+//      });
+//      
       
       tracker.start();
       

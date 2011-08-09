@@ -73,7 +73,7 @@ class ComponentAction<T> extends AbstractAction {
    // return the one that currently has focus
    public T getFocusedComponent(){
       Component comp = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
-      System.out.println("ComponentAction: " + comp.getClass() + " has focus");
+      //System.out.println("ComponentAction: " + comp.getClass() + " has focus");
       
       if (klass.isInstance(comp))
          return (T) comp;
@@ -179,7 +179,7 @@ public class StepEditView extends SlideEditView {
       imap.put(KeyStroke.getKeyStroke("meta I"), StepEditKit.importContextImageFromFileAction.getValue(Action.NAME));
 
       map.put(StepEditKit.toogleOverlayVisibilityAction.getValue(Action.NAME), StepEditKit.toogleOverlayVisibilityAction);
-      imap.put(KeyStroke.getKeyStroke("ctrl 1"), StepEditKit.toogleOverlayVisibilityAction.getValue(Action.NAME));
+      //imap.put(KeyStroke.getKeyStroke("ctrl 1"), StepEditKit.toogleOverlayVisibilityAction.getValue(Action.NAME));
       map.put(StepEditKit.toogleContextVisibilityAction.getValue(Action.NAME), StepEditKit.toogleContextVisibilityAction);
       imap.put(KeyStroke.getKeyStroke("ctrl 2"), StepEditKit.toogleContextVisibilityAction.getValue(Action.NAME));
 
@@ -196,13 +196,13 @@ public class StepEditView extends SlideEditView {
 
 
 //      map.put(StepEditKit.getInsertTargetAction.getValue(Action.NAME), StepEditKit.getInsertTargetAction);
-      imap.put(KeyStroke.getKeyStroke("meta 1"), StepEditKit.insertTargetAction);
+//      imap.put(KeyStroke.getKeyStroke("meta 1"), StepEditKit.insertTargetAction);
 //      map.put(StepEditKit.getInsertTextAction.getValue(Action.NAME), StepEditKit.getInsertTextAction);
-      imap.put(KeyStroke.getKeyStroke("meta 2"), StepEditKit.insertTextAction);
+//      imap.put(KeyStroke.getKeyStroke("meta 2"), StepEditKit.insertTextAction);
 //      map.put(StepEditKit.insertCircleAction.getValue(Action.NAME), StepEditKit.insertCircleAction);
-      imap.put(KeyStroke.getKeyStroke("meta 3"), StepEditKit.insertCircleAction);
+//      imap.put(KeyStroke.getKeyStroke("meta 3"), StepEditKit.insertCircleAction);
 //      map.put(StepEditKit.insertFlagTextAction.getValue(Action.NAME), StepEditKit.insertFlagTextAction);
-      imap.put(KeyStroke.getKeyStroke("meta 4"), StepEditKit.insertFlagTextAction);
+//      imap.put(KeyStroke.getKeyStroke("meta 4"), StepEditKit.insertFlagTextAction);
 
 
       map.put(TransferHandler.getCutAction().getValue(Action.NAME),
@@ -1069,8 +1069,9 @@ public class StepEditView extends SlideEditView {
    class CopyCutPasteTool{
 
 
+      @Deprecated
       List<ContextImage> cachedContextImages = new ArrayList<ContextImage>();
-
+      @Deprecated
       private boolean loadBufferedImageFromExistingImages(DefaultContextImage contextImage){
          Story story = getStory();
 
@@ -1100,41 +1101,20 @@ public class StepEditView extends SlideEditView {
       void pasteSprites(List<Sprite> listSpriteToPaste) {
          selectionTool.clearSelection();
          for (Sprite spriteToPaste : listSpriteToPaste){
-
-//            if (spriteToPaste instanceof DefaultContextImage){
-//               DefaultContextImage contextImageToPaste = (DefaultContextImage) spriteToPaste;
-//
-//               // before adding to the step, try to load the buffered image from an
-//               // existing context image with the same image i
-//               if (!loadBufferedImageFromExistingImages(contextImageToPaste))
-//                  continue;
-//            }
-
             getStep().addSprite(spriteToPaste);                  
             SpriteView spriteView = addView(spriteToPaste);
             selectionTool.select(spriteView);
          }
       }
 
-
       void copySprites(List<Sprite> sprites) {      
-//         cachedContextImages.clear();
-//         for (Sprite sprite : sprites){
-//            if (sprite instanceof ContextImage){
-//               cachedContextImages.add((ContextImage) sprite);
-//            }      
-//         }
       }
 
 
       void cutSprites(List<Sprite> sprites) {      
-//         cachedContextImages.clear();
          for (Sprite sprite : sprites){
             _step.removeSprite(sprite);
             selectionTool.clearSelection();
-//            if (sprite instanceof ContextImage){
-//               cachedContextImages.add((ContextImage) sprite);
-//            }      
          }
       }
    }

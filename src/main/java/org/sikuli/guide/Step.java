@@ -4,6 +4,8 @@ import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +24,10 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Order;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.strategy.CycleStrategy;
+import org.simpleframework.xml.strategy.Strategy;
 
 @Root
 @Order(elements = {"sprites", "relationships"})
@@ -29,6 +35,24 @@ public class Step extends DefaultSlide implements PropertyChangeListener {
    
    public Step(){
       super();
+   }
+   
+   Step createCopy() throws Exception{
+      Strategy strategy = new CycleStrategy("id","ref");
+      Serializer serializer = new Persister(strategy);
+      
+      
+      for (Sprite sprite : getSprites()){
+         if (sprite instanceof DefaultContextImage){
+            ((DefaultContextImage) sprite).exportTemporaryImageFileForTransfer();
+         }
+      }
+      
+      StringWriter writer = new StringWriter();
+      serializer.write(this, writer);
+      
+      StringReader reader = new StringReader(writer.toString());
+      return serializer.read(Step.class, reader);      
    }
    
    void removeAllSprites(){

@@ -56,6 +56,7 @@ public class StoryEditorKit {
    
    static public Action[] getActions(){      
       return new Action[]{         
+            new PlayAction(playCurrentStepAction),
             getInsertNewStepAction(),
             getCutAction(),
             getCopyAction(),
@@ -99,22 +100,32 @@ public class StoryEditorKit {
    //
    //   };
 
-   static class PlayAction extends StoryEditorKit.InsertAction{
+   static class PlayAction extends ComponentAction<StoryEditor>{
 
       final static String CURRENT = "current";
 
       PlayAction(String s){
-         super(s);
+         super(s, StoryEditor.class);
       }
 
       @Override
-      public void actionPerformed(ActionEvent e) {
-         System.out.println("PLAY");
-         StoryEditor editor = getComponent(e);
-         if (e.getActionCommand().equals(CURRENT)){
-            editor.play();
-         }
+      protected void execute(StoryEditor editor) {
+         System.out.println("playing");
+         //int index = editor.getSelectionTool().getSelectedIndex();
+         editor.play();
+         //Step newStep = new Step();
+         //editor.getStory().insertElementAt(newStep, index+1);        
       }
+
+      
+//      @Override
+//      public void actionPerformed(ActionEvent e) {
+//         System.out.println("PLAY");
+//         StoryEditor editor = getComponent(e);
+//         if (e.getActionCommand().equals(CURRENT)){
+//            editor.play();
+//         }
+//      }
 
    }
 

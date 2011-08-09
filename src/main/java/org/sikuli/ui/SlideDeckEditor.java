@@ -49,13 +49,14 @@ public class SlideDeckEditor extends JPanel {
       JScrollPane scrollPane = new JScrollPane();
       RightPanel(){
          setLayout(new MigLayout("insets 0"));
-         //add(scrollPane);
+         add(scrollPane, "dock center");
          setBackground(Color.red);
       }
       
       void setComponent(JComponent comp){
-         removeAll();
-         add(comp, "dock center");//scrollPane.setViewportView(comp);
+         //removeAll();
+         //add(scrollPane, "dock center");
+         scrollPane.setViewportView(comp);
          validate();
       }
       

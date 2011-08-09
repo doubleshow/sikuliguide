@@ -2,12 +2,15 @@ package org.sikuli.guide;
 
 import java.awt.AWTException;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -34,7 +37,7 @@ public class StoryEditor extends SlideDeckEditor
 
       @Override
       public void actionPerformed(ActionEvent e) {
-         System.out.println("editor action triggered");
+         //System.out.println("editor action triggered");
       }
       
       // return the one that currently has focus
@@ -112,6 +115,8 @@ public class StoryEditor extends SlideDeckEditor
       listView.setDragEnabled(false);
 
       StepEditView editView = new StepEditView();      
+      editView.setPreferredSize(new Dimension(800,600));
+      editView.setMinimumSize(new Dimension(800,600));
       setSlideEditView(editView);
       
       // these allow StoryEditor to remember which view mostly recently had focus
@@ -129,7 +134,7 @@ public class StoryEditor extends SlideDeckEditor
    @Override
    public void requestFocus(){
       super.requestFocus();
-      System.out.println("requesting focus for editview");
+//      System.out.println("requesting focus for editview");
       //getListView().setFocusable(false);
       getEditView().requestFocus();
       //getListView().setFocusable(true);
@@ -139,11 +144,13 @@ public class StoryEditor extends SlideDeckEditor
       Step step = (Step) getSelected();
       StoryPlayer player;
       try {
-         player = new StoryPlayer();
-         player.play(step);
+         player = new DefaultStoryPlayer();
+         List<Step> steps = new ArrayList<Step>();
+         steps.add(step);
+         player.play(steps);
       } catch (AWTException e) {
          // TODO Auto-generated catch block
-         //e.printStackTrace();
+         e.printStackTrace();
       }
    }
    
@@ -151,7 +158,6 @@ public class StoryEditor extends SlideDeckEditor
       int n = actions.length;
       for (int i = 0; i < n; i++) {
          Action a = actions[i];
-         System.out.println(a.getValue(Action.NAME));
          map.put(a.getValue(Action.NAME), a);
       }
    }
@@ -203,7 +209,7 @@ public class StoryEditor extends SlideDeckEditor
       setSlideDeck(story);
    }
    
-   protected Story getStory() {
+   public Story getStory() {
       return (Story) getSlideDeck();
    }
 

@@ -270,7 +270,7 @@ public class StepEditKit {
          
          Sprite sprite = null;
          if (type.equals(TARGET)){       
-            sprite = new DefaultTarget();
+            sprite = new ContextTarget();
          }else if (type.equals(TEXT)){
             sprite = new DefaultText("Text");
          }else if (type.equals(FLAG)){

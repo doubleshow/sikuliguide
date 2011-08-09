@@ -108,7 +108,6 @@ implements Serializable, Bundleable {
 
    @Commit
    void commit(){
-      System.out.println("commit import");
       if (transferFilePath != null){
          try {
             image = ImageIO.read(new File(transferFilePath));
